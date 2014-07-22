@@ -2,11 +2,50 @@ PATH
   remote: .
   specs:
     facemock (0.0.1)
+      activerecord (~> 3.2.18)
+      fb_graph
+      sqlite3
 
 GEM
   remote: https://rubygems.org/
   specs:
+    activemodel (3.2.19)
+      activesupport (= 3.2.19)
+      builder (~> 3.0.0)
+    activerecord (3.2.19)
+      activemodel (= 3.2.19)
+      activesupport (= 3.2.19)
+      arel (~> 3.0.2)
+      tzinfo (~> 0.3.29)
+    activesupport (3.2.19)
+      i18n (~> 0.6, >= 0.6.4)
+      multi_json (~> 1.0)
+    arel (3.0.3)
+    attr_required (1.0.0)
+    builder (3.0.4)
+    coderay (1.1.0)
     diff-lcs (1.2.5)
+    docile (1.1.5)
+    fb_graph (2.7.16)
+      httpclient (>= 2.2.0.2)
+      multi_json (>= 1.3)
+      rack-oauth2 (>= 0.14.4)
+      tzinfo
+    httpclient (2.4.0)
+    i18n (0.6.11)
+    method_source (0.8.2)
+    multi_json (1.10.1)
+    pry (0.10.0)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    rack (1.5.2)
+    rack-oauth2 (1.0.8)
+      activesupport (>= 2.3)
+      attr_required (>= 0.0.5)
+      httpclient (>= 2.2.0.2)
+      multi_json (>= 1.3.6)
+      rack (>= 1.1)
     rake (10.3.2)
     rspec (3.0.0)
       rspec-core (~> 3.0.0)
@@ -20,6 +59,14 @@ GEM
     rspec-mocks (3.0.3)
       rspec-support (~> 3.0.0)
     rspec-support (3.0.3)
+    simplecov (0.9.0)
+      docile (~> 1.1.0)
+      multi_json
+      simplecov-html (~> 0.8.0)
+    simplecov-html (0.8.0)
+    slop (3.6.0)
+    sqlite3 (1.3.9)
+    tzinfo (0.3.40)
 
 PLATFORMS
   ruby
@@ -27,5 +74,7 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.3)
   facemock!
+  pry
   rake
   rspec
+  simplecov
