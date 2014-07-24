@@ -19,3 +19,4 @@ tmp/
 db/*.sqlite3
 vendor/bundle/
 vendor/bundler/
+log/*.log
