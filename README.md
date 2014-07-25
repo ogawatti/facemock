@@ -82,13 +82,22 @@ for specified gem
     Facemock.on
     facebook_app_id     = "100000000000000"
     facebook_app_secret = "facemock_app_secret"
-    app = FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
-    user  = app.test_user!({name: "face mock"})
+    app  = FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
+    user = app.test_user!({name: "face mock", permissions: "email, read_stream"})
     access_token = user.access_token
 
     # Get User by Access Token
     user = FbGraph::User.me(access_token)
-    user.name  #=> "face mock"
+    user.name         #=> "face mock"
+    user.permissions  #=> [:email, :read_stream]
+
+    # Delete permission
+    user.revoke!
+    user.permissions  #=> []
+
+    # Delete User
+    user.destroy
+    FbGraph::User.me(access_token)  #=> nil
 
 ### Exception
 
