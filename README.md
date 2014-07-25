@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ogawatti/facemock.svg?branch=master)](https://travis-ci.org/ogawatti/facemock)
+
 # Facemock
 
 Facemock is facebook mock application for FbGraph.
