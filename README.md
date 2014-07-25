@@ -1,6 +1,6 @@
 # Facemock
 
-TODO: Write a gem description
+Facemock is facebook mock application for FbGraph.
 
 ## Installation
 
@@ -18,7 +18,88 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Mock on/off
+
+for all gem
+
+    require 'facemock'
+
+    FbGraph       #=> FbGraph
+    Facemock.on
+    FbGraph       #=> Facemock::FbGraph
+    Facemock.off
+    FbGraph       #=> FbGraph
+
+for specified gem
+
+    require 'facemock'
+
+    FbGraph       #=> FbGraph
+    Facemock::FbGraph.on
+    FbGraph       #=> Facemock::FbGraph
+    Facemock::FbGraph.off
+    FbGraph       #=> FbGraph
+
+### Test User
+
+    require 'facemock'
+
+    Facemock.on
+    facebook_app_id     = "100000000000000"
+    facebook_app_secret = "facemock_app_secret"
+    app = FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
+
+
+    ## Create Test User
+    user = app.test_user!
+    user = app.test_user!( { name: "test user", permissions: "email, read_stream" } )
+    user.name         #=> "test user"
+    user.permissions  #=> [:email, :read_stream]
+
+
+    ## Get Created Test User
+    app.test_users  #=> [#<Facemock::FbGraph::Application::User id: ...>, ...]
+    app.test_users.size  #=> 2
+    test_users.first     #=> User that was created at the last
+    test_users.last      #=> User that was created at the first
+
+    test_users = app.test_users({ limit: 1, after: 1 })
+    test_users.size = 1
+    test_users.first.id  #=> [#<Facemock::FbGraph::Application::User id: ...>, ...]
+
+
+    # Delete Test User
+    app.test_users.size           #=> 2
+    app.test_users.first.destroy
+    app.test_users.size           #=> 1
+    app.test_users.first.destroy
+    app.test_users                #=> []
+
+### User
+
+    require 'facemock'
+
+    Facemock.on
+    facebook_app_id     = "100000000000000"
+    facebook_app_secret = "facemock_app_secret"
+    app = FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
+    user  = app.test_user!({name: "face mock"})
+    access_token = user.access_token
+
+    # Get User by Access Token
+    user = FbGraph::User.me(access_token)
+    user.name  #=> "face mock"
+
+### Exception
+
+    require 'facemock'
+
+    Facemock.on
+    begin
+      raise FbGraph::Errors::InvalidToken.new "test exception"
+    rescue => e
+      puts "#{e.class} : #{e.message}"  #=> Facemock::FbGraph::Errors::InvalidToken : test exception
+    end
 
 ## Contributing
 
