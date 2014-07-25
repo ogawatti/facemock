@@ -39,7 +39,7 @@ describe Facemock::FbGraph::Application::User do
       it 'should be initialized attribute' do
         user = Facemock::FbGraph::Application::User.new
 
-        expect(user.identifier).to        be_kind_of Fixnum
+        expect(user.identifier).to        be_kind_of Integer
         expect(user.name).to              be_kind_of String
         expect(user.email).to             be_kind_of String
         expect(user.password).to          be_kind_of String
