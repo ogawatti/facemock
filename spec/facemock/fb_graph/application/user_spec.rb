@@ -105,16 +105,27 @@ describe Facemock::FbGraph::Application::User do
   end
 
   describe '#revoke!' do
-    before do
-      @user = Facemock::FbGraph::Application::User.new
-      @user.save!
+    context 'when does not have permission' do
+      before do
+        @user = Facemock::FbGraph::Application::User.new
+        @user.save!
+      end
+
+      subject { lambda { @user.revoke! } }
+      it { is_expected.not_to raise_error }
     end
 
-    it 'should equal destroy' do
-      count = Facemock::FbGraph::Application::User.all.count
-      @user.revoke!
-      expect(Facemock::FbGraph::Application::User.all.count).to eq count - 1
-      expect(Facemock::FbGraph::Application::User.find_by_id(@user.id)).to eq nil
+    context 'when have some permissions' do
+      before do
+        @user = Facemock::FbGraph::Application::User.new({permissions:  "email, read_stream"})
+        @user.save!
+      end
+
+      it 'should destroy permissions' do
+        @user.revoke!
+        expect(Facemock::FbGraph::Application::User::Right.find_by_user_id(@user.id)).to be_nil
+        expect(@user.permissions).to be_empty
+      end
     end
   end
 end
