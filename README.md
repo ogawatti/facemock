@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/ogawatti/facemock.svg?branch=master)](https://travis-ci.org/ogawatti/facemock)
 [![Coverage Status](https://coveralls.io/repos/ogawatti/facemock/badge.png?branch=master)](https://coveralls.io/r/ogawatti/facemock?branch=master)
 [<img src="https://gemnasium.com/ogawatti/facemock.png" />](https://gemnasium.com/ogawatti/facemock)
+[![Code Climate](https://codeclimate.com/github/ogawatti/facemock.png)](https://codeclimate.com/github/ogawatti/facemock)
 
 # Facemock
 
