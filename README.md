@@ -1,4 +1,4 @@
-[![GitHub version](https://badge.fury.io/gh/ogawatti%2Ffacemock.svg)](http://badge.fury.io/gh/ogawatti%2Ffacemock)
+[![Gem Version](https://badge.fury.io/rb/facemock.svg)](http://badge.fury.io/rb/facemock)
 [![Build Status](https://travis-ci.org/ogawatti/facemock.svg?branch=master)](https://travis-ci.org/ogawatti/facemock)
 [![Coverage Status](https://coveralls.io/repos/ogawatti/facemock/badge.png?branch=master)](https://coveralls.io/r/ogawatti/facemock?branch=master)
 [<img src="https://gemnasium.com/ogawatti/facemock.png" />](https://gemnasium.com/ogawatti/facemock)
