@@ -5,8 +5,8 @@ require "facemock/config"
 module Facemock 
   extend self
 
-  def on
-    Facemock::FbGraph.on
+  def on(options={})
+    Facemock::FbGraph.on(options)
   end
 
   def off

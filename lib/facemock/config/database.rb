@@ -72,14 +72,12 @@ module Facemock
 
       def create_applications_table
         ActiveRecord::Migration.create_table :applications do |t|
-          t.integer :id,     :null => false
           t.string  :secret, :null => false
         end
       end
 
       def create_users_table
         ActiveRecord::Migration.create_table :users do |t|
-          t.integer   :id,             :null => false
           t.string    :name,           :null => false
           t.string    :email,          :null => false
           t.string    :password,       :null => false

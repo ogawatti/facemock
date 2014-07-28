@@ -1,6 +1,5 @@
 require 'active_record'
 require 'facemock/fb_graph/application/user/right'
-require 'pry'
 
 module Facemock
   module FbGraph

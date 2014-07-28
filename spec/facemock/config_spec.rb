@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 describe Facemock::Config do
   let(:db_name) { ".test" }
