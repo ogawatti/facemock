@@ -18,11 +18,6 @@ module Facemock
           secret = options[:secret] || rand(36**32).to_s(36)
         end
         
-        if options[:database_name]
-          Facemock::Config.database(options[:database_name])
-        else
-          Facemock::Config.database
-        end
         super(secret: secret)
         self.identifier = identifier
         save! unless Application.find_by_id_and_secret(identifier, secret)

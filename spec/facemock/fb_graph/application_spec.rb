@@ -27,7 +27,10 @@ describe Facemock::FbGraph::Application do
     it { is_expected.to eq table_name }
   end
 
-  before { stub_const("Facemock::Config::Database::DEFAULT_DB_NAME", db_name) }
+  before do
+    stub_const("Facemock::Config::Database::DEFAULT_DB_NAME", db_name)
+    Facemock::Config.database
+  end
   after  { Facemock::Config.database.drop }
 
   describe '#new' do
@@ -50,9 +53,10 @@ describe Facemock::FbGraph::Application do
       end
     end
 
-    context 'with facebook app id and secret, database name option' do
+    context 'with facebook app id and secret' do
       before do
-        options = { secret: facebook_app_secret, database_name: db_name }
+        options = { secret: facebook_app_secret }
+        Facemock::FbGraph.on
         @app = Facemock::FbGraph::Application.new(facebook_app_id, options)
       end
 
