@@ -105,6 +105,35 @@ for specified gem
     user.destroy
     FbGraph::User.me(access_token)  #=> nil
 
+### Register Test User by yaml file
+
+    require 'facemock'
+
+    Facemock::FbGraph.on
+    Facemock::Config.load_users("./test_users.yml")
+
+yaml file see belo.
+
+    ---
+    - :app_id: '000000000000001'
+      :app_secret: test_secret_one
+      :users:
+      - :identifier: 100000000000001
+        :name: test user one
+        :email: test_user_one@example.com
+        :password: testpass
+      - :identifier: '100000000000002'
+        :name: test user two
+        :email: test_user_two@example.com
+        :password: testpass
+    - :app_id: '000000000000002'
+      :app_secret: test_secret_two
+      :users:
+      - :identifier: 100000000000003
+        :name: test user three
+        :email: test_user_three@example.com
+        :password: testpass
+
 ### Exception
 
     require 'facemock'

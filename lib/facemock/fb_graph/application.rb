@@ -1,4 +1,5 @@
 require 'active_record'
+require 'hashie'
 require 'facemock/config'
 require 'facemock/fb_graph/application/user'
 require 'facemock/fb_graph/application/test_users'
@@ -10,12 +11,13 @@ module Facemock
       has_many :users, :dependent => :destroy
 
       def initialize(identifier, options={})
-        if (identifier == :app && options[:access_token])
+        opts = Hashie::Mash.new(options)
+        if (identifier == :app && opts.access_token)
           identifier = (0..9).to_a.shuffle[0..15].join
-          secret = options[:access_token]
+          secret = opts.access_token
         else
           identifer = identifier.to_s
-          secret = options[:secret] || rand(36**32).to_s(36)
+          secret = opts.secret || rand(36**32).to_s(36)
         end
         
         super(secret: secret)
