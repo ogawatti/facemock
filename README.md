@@ -112,17 +112,6 @@ for specified gem
     Facemock::FbGraph.on
     Facemock::Config.load_users("./test_users.yml")
 
-### Exception
-
-    require 'facemock'
-
-    Facemock.on
-    begin
-      raise FbGraph::Errors::InvalidToken.new "test exception"
-    rescue => e
-      puts "#{e.class} : #{e.message}"  #=> Facemock::FbGraph::Errors::InvalidToken : test exception
-    end
-
 yaml file see belo.
 
     ---
@@ -144,6 +133,17 @@ yaml file see belo.
         :name: test user three
         :email: test_user_three@example.com
         :password: testpass
+
+### Exception
+
+    require 'facemock'
+
+    Facemock.on
+    begin
+      raise FbGraph::Errors::InvalidToken.new "test exception"
+    rescue => e
+      puts "#{e.class} : #{e.message}"  #=> Facemock::FbGraph::Errors::InvalidToken : test exception
+    end
 
 ## Contributing
 
