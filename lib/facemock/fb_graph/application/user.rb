@@ -1,4 +1,5 @@
 require 'active_record'
+require 'hashie'
 require 'facemock/fb_graph/application/user/right'
 
 module Facemock
@@ -11,12 +12,13 @@ module Facemock
         attr_reader :permissions
 
         def initialize(options={})
-          identifier   = options[:identifier]   || ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
-          name         = options[:name]         || rand(36**10).to_s(36)
-          email        = options[:email]        || name.gsub(" ", "_") + "@example.com"
-          password     = options[:password]     || rand(36**10).to_s(36)
-          installed    = options[:installed]    || false
-          access_token = options[:access_token] || Digest::SHA512.hexdigest(identifier.to_s)
+          opts = Hashie::Mash.new(options)
+          identifier   = opts.identifier   || ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
+          name         = opts.name         || rand(36**10).to_s(36)
+          email        = opts.email        || name.gsub(" ", "_") + "@example.com"
+          password     = opts.password     || rand(36**10).to_s(36)
+          installed    = opts.installed    || false
+          access_token = opts.access_token || Digest::SHA512.hexdigest(identifier.to_s)
           @permissions = []
 
           super(
@@ -27,11 +29,11 @@ module Facemock
             :access_token => access_token
           )
           self.id = identifier
-          if options[:permissions] 
-            build_rights(options[:permissions])
+          if opts.permissions
+            build_rights(opts.permissions)
             set_permissions
-          elsif options[:application_id]
-            self.application_id = options[:application_id]
+          elsif opts.application_id
+            self.application_id = opts.application_id
           end
         end
 
