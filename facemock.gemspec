@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = Facemock::VERSION
   spec.authors       = ["ogawatti"]
   spec.email         = ["ogawattim@gmail.com"]
-  spec.description   = %q{This is facebook mock application for fb_graph.}
+  spec.description   = %q{This gem is used to mock the communication part of the facebook graph api.}
   spec.summary       = %q{This is facebook mock application for fb_graph.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/ogawatti/facemock"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
