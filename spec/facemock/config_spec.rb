@@ -6,14 +6,14 @@ describe Facemock::Config do
   let(:ymlfile) { "testdata.yml" }
 
   it 'should have a database module' do
-    expect(Facemock::Config::Database).to be_truthy
+    expect(Facemock::Database).to be_truthy
   end
 
   describe '#default_database' do
     before do
-      allow_any_instance_of(Facemock::Config::Database).to receive(:connect) { true }
-      allow_any_instance_of(Facemock::Config::Database).to receive(:create_tables) { true }
-      allow_any_instance_of(Facemock::Config::Database).to receive(:disconnect!) { true }
+      allow_any_instance_of(Facemock::Database).to receive(:connect) { true }
+      allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
+      allow_any_instance_of(Facemock::Database).to receive(:disconnect!) { true }
     end
 
     subject { Facemock::Config.default_database }
@@ -28,9 +28,9 @@ describe Facemock::Config do
 
   describe '#database' do
     before do
-      allow_any_instance_of(Facemock::Config::Database).to receive(:connect) { true }
-      allow_any_instance_of(Facemock::Config::Database).to receive(:create_tables) { true }
-      allow_any_instance_of(Facemock::Config::Database).to receive(:disconnect!) { true }
+      allow_any_instance_of(Facemock::Database).to receive(:connect) { true }
+      allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
+      allow_any_instance_of(Facemock::Database).to receive(:disconnect!) { true }
     end
 
     context 'without argument' do
@@ -63,7 +63,7 @@ describe Facemock::Config do
 
     context 'when already set database' do
       before do
-        stub_const("Facemock::Config::Database::DEFAULT_DATABASE_NAME", db_name)
+        stub_const("Facemock::Database::DEFAULT_DATABASE_NAME", db_name)
         Facemock::Config.database
       end
 
@@ -107,7 +107,7 @@ describe Facemock::Config do
 
     context 'with yaml file path' do
       before do
-        stub_const("Facemock::Config::Database::DEFAULT_DB_NAME", db_name)
+        stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
         Facemock::Config.database
       end
       after  { Facemock::Config.database.drop }

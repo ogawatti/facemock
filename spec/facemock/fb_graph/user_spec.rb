@@ -10,7 +10,7 @@ describe Facemock::FbGraph::User do
   let(:db_filepath)   { File.join(db_directory, "#{db_name}.#{adapter}") }
 
   before do
-    stub_const("Facemock::Config::Database::DEFAULT_DB_NAME", db_name)
+    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
     Facemock::Config.database
   end
   after  { Facemock::Config.database.drop }

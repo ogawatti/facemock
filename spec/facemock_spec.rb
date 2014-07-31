@@ -17,12 +17,16 @@ describe Facemock do
     expect(Facemock::FbGraph).to be_truthy
   end
 
+  it 'should have a database class' do
+    expect(Facemock::Database).to be_truthy
+  end
+
   it 'should have a errors module' do
     expect(Facemock::Errors).to be_truthy
   end
 
   before do
-    stub_const("Facemock::Config::Database::DEFAULT_DB_NAME", db_name)
+    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
   end
   after  { Facemock::Config.database.drop }
 

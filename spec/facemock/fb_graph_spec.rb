@@ -16,7 +16,7 @@ describe Facemock::FbGraph do
   end
 
   before do
-    stub_const("Facemock::Config::Database::DEFAULT_DB_NAME", db_name)
+    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
   end
   after  { Facemock::Config.database.drop }
 

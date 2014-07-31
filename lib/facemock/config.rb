@@ -1,7 +1,7 @@
 require 'yaml'
 require 'hashie'
 require 'facemock/errors'
-require 'facemock/config/database'
+require 'facemock/database'
 require 'facemock/fb_graph/application'
 
 module Facemock
@@ -9,7 +9,7 @@ module Facemock
     extend self
 
     def default_database
-      Database.new
+      Facemock::Database.new
     end
 
     def database(name=nil)
@@ -17,7 +17,7 @@ module Facemock
         @db = default_database
       else
         @db.disconnect! if @db
-        @db = Database.new(name)
+        @db = Facemock::Database.new(name)
       end
       @db
     end
