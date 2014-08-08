@@ -1,13 +1,12 @@
 require 'spec_helper'
 
 describe Facemock::Database do
+  let(:db_name)         { ".test" }
   let(:default_db_name) { "facemock" }
   let(:adapter)         { "sqlite3" }
-  let(:table_names)     { [:applications, :users, :user_rights] }
+  let(:table_names)     { [:applications, :users, :permissions] }
   let(:db_directory)    { File.expand_path("../../../db", __FILE__) }
   let(:db_filepath)     { File.join(db_directory, "#{db_name}.#{adapter}") }
-
-  let(:db_name)         { ".test" }
 
   describe '::ADAPTER' do
     subject { Facemock::Database::ADAPTER }
@@ -29,42 +28,34 @@ describe Facemock::Database do
     it { is_expected.to eq default_db_name }
   end
 
+  it 'should have a table class' do
+    expect(Facemock::Database::Table).to be_truthy
+  end
+
+  it 'should have a application class' do
+    expect(Facemock::Database::Application).to be_truthy
+  end
+
+  it 'should have a user class' do
+    expect(Facemock::Database::User).to be_truthy
+  end
+
+  it 'should have a permission class' do
+    expect(Facemock::Database::Permission).to be_truthy
+  end
+
   describe '#initialize' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:connect) { true }
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
     end
 
-    context 'with database name' do
-      subject { lambda { Facemock::Database.new(db_name) } }
-      it { is_expected.not_to raise_error }
+    subject { lambda { Facemock::Database.new } }
+    it { is_expected.not_to raise_error }
 
-      describe '.name' do
-        subject { Facemock::Database.new(db_name).name }
-        it { is_expected.to eq db_name }
-      end
-    end
-
-    context 'without argument' do
-      subject { lambda { Facemock::Database.new } }
-      it { is_expected.not_to raise_error }
-
-      describe '.name' do
-        subject { Facemock::Database.new.name }
-        it { is_expected.to eq default_db_name }
-      end
-    end
-
-    context 'with nil or "" or default database name' do
-      [nil, "", "facemock"].each do |argument|
-        subject { lambda { Facemock::Database.new(argument) } }
-        it { is_expected.not_to raise_error }
-
-        describe '.name' do
-          subject { Facemock::Database.new(argument).name }
-          it { is_expected.to eq default_db_name }
-        end
-      end
+    describe '.name' do
+      subject { Facemock::Database.new.name }
+      it { is_expected.to eq default_db_name }
     end
   end
 
@@ -77,7 +68,6 @@ describe Facemock::Database do
 
     subject { lambda { @database.connect } }
     it { is_expected.not_to raise_error }
-    it { expect(ActiveRecord::Base.connected?).to eq true }
     it { expect(File.exist?(@database.filepath)).to eq true }
 
     after { Facemock::Config.database.drop }
@@ -98,6 +88,39 @@ describe Facemock::Database do
         before { @database.disconnect! }
         it { expect(File.exist?(@database.filepath)).to eq true }
       end
+    end
+
+    after { Facemock::Config.database.drop }
+  end
+
+  describe '#connected?' do
+    before do
+      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+      @database = Facemock::Config.database
+    end
+
+    context 'after new' do
+      subject { @database.connected? }
+      it { is_expected.to eq true }
+    end
+
+    context 'after disconnect!' do
+      before do
+        @database.disconnect!
+      end
+
+      subject { @database.connected? }
+      it { is_expected.to eq false }
+    end
+
+    context 'after connect' do
+      before do
+        @database.disconnect!
+        @database.connect
+      end
+
+      subject { @database.connected? }
+      it { is_expected.to eq true }
     end
 
     after { Facemock::Config.database.drop }
@@ -157,14 +180,63 @@ describe Facemock::Database do
     after { Facemock::Config.database.drop }
   end
 
+  describe '#drop_table' do
+    before do
+      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+      @database = Facemock::Config.database
+    end
+
+    context 'when table exist' do
+      it 'should return true' do
+        table_names.each do |table_name|
+          expect(@database.drop_table(table_name)).to eq true
+        end
+      end
+    end
+
+    context 'when table does not exist' do
+      it 'should return true' do
+        @database.drop_tables
+        table_names.each do |table_name|
+          expect(@database.drop_table(table_name)).to eq false
+        end
+      end
+    end
+
+    context 'when database does not exist' do
+      it 'should return false' do
+        @database.drop
+        table_names.each do |table_name|
+          expect(@database.drop_table(table_name)).to eq false
+        end
+      end
+    end
+
+    after { Facemock::Config.database.drop }
+  end
+
   describe '#drop_tables' do
     before do
       stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
       @database = Facemock::Config.database
     end
 
-    subject { lambda { @database.drop_tables } }
-    it { is_expected.not_to raise_error }
+    context 'when table exist' do
+      subject { @database.drop_tables }
+      it { is_expected.to eq true }
+    end
+
+    context 'when table does not exist' do
+      before { table_names.each{|table_name| @database.drop_table(table_name)} }
+      subject { @database.drop_tables }
+      it { is_expected.to eq true }
+    end
+
+    context 'when database does not exist' do
+      before { @database.drop }
+      subject { @database.drop_tables }
+      it { is_expected.to eq false }
+    end
 
     after { Facemock::Config.database.drop }
   end
@@ -186,35 +258,23 @@ describe Facemock::Database do
     after { Facemock::Config.database.drop }
   end
 
-  describe '#connected?' do
+  describe '#table_exists?' do
     before do
       stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
       @database = Facemock::Config.database
     end
+
+    context 'when new' do
+      it 'should exist all tables' do
+        table_names.each do |table_name|
+          expect(@database.table_exists?(table_name)).to eq true
+        end
+      end
+    end
+
+    context 'when drop tables' do
+    end
+
     after { Facemock::Config.database.drop }
-
-    context 'after new' do
-      subject { @database.connected? }
-      it { is_expected.to eq true }
-    end
-
-    context 'after disconnect!' do
-      before do
-        @database.disconnect!
-      end
-
-      subject { @database.connected? }
-      it { is_expected.to eq false }
-    end
-
-    context 'after connect' do
-      before do
-        @database.disconnect!
-        @database.connect
-      end
-
-      subject { @database.connected? }
-      it { is_expected.to eq true }
-    end
   end
 end

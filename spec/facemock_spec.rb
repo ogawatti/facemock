@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Facemock do
-  let(:version) { "0.0.2" }
+  let(:version) { "0.0.3" }
   let(:db_name) { ".test" }
 
   describe 'VERSION' do
@@ -25,31 +25,14 @@ describe Facemock do
     expect(Facemock::Errors).to be_truthy
   end
 
-  before do
-    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-  end
-  after  { Facemock::Config.database.drop }
-
   describe '#on' do
     subject { Facemock.on }
     it { is_expected.to be_truthy }
 
     context 'FbGraph' do
-      context 'without option' do
-        before { Facemock.on }
-        it { expect(::FbGraph).to eq Facemock::FbGraph }
-        it { expect( lambda { Facemock.on } ).not_to raise_error }
-      end
-
-      context 'with database_name option' do
-        before do
-          @options = { database_name: db_name}
-          Facemock.on(@options)
-        end
-        it { expect(::FbGraph).to eq Facemock::FbGraph }
-        it { expect( lambda { Facemock.on } ).not_to raise_error }
-        it { expect( lambda { Facemock.on(@options) } ).not_to raise_error }
-      end
+      before { Facemock.on }
+      it { expect(::FbGraph).to eq Facemock::FbGraph }
+      it { expect( lambda { Facemock.on } ).not_to raise_error }
     end
   end
 

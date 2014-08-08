@@ -50,8 +50,11 @@ describe Facemock::FbGraph::Application::TestUsers do
         it 'should have user' do
           test_users = Facemock::FbGraph::Application::TestUsers.new(facebook_app_id)
           expect(test_users).not_to be_empty
-          expect(test_users).to include @user
           expect(test_users.count).to eq 1
+          test_user = test_users.first
+          Facemock::FbGraph::Application::User.column_names.each do |column_name|
+            expect(test_user.send(column_name)).to eq @user.send(column_name)
+          end
         end
       end
     end
@@ -60,18 +63,17 @@ describe Facemock::FbGraph::Application::TestUsers do
       context 'that limit is 1' do
         context 'when user is exist only two' do
           before do
-            user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            user.save!
-            @last_created_user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            @last_created_user.save!
+            2.times do
+              Facemock::FbGraph::Application::User.new(application_id: facebook_app_id).save!
+            end
             @limit = 1
           end
 
           it 'should have only one user' do
             test_users = Facemock::FbGraph::Application::TestUsers.new(facebook_app_id, limit: @limit)
             expect(test_users).not_to be_empty
-            expect(test_users.count).to eq 1
-            expect(test_users).to include @last_created_user
+            expect(test_users.count).to eq @limit
+            expect(test_users.first).to be_kind_of Facemock::FbGraph::Application::User
           end
         end
       end
@@ -79,10 +81,9 @@ describe Facemock::FbGraph::Application::TestUsers do
       context 'that after is 1' do
         context 'when user is exist only two' do
           before do
-            @first_created_user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            @first_created_user.save!
-            user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            user.save!
+            2.times do
+              Facemock::FbGraph::Application::User.new(application_id: facebook_app_id).save!
+            end
             @after = 1
           end
 
@@ -90,7 +91,7 @@ describe Facemock::FbGraph::Application::TestUsers do
             test_users = Facemock::FbGraph::Application::TestUsers.new(facebook_app_id, after: @after)
             expect(test_users).not_to be_empty
             expect(test_users.count).to eq 1
-            expect(test_users).to include @first_created_user
+            expect(test_users.first).to be_kind_of Facemock::FbGraph::Application::User
           end
         end
       end
@@ -98,12 +99,9 @@ describe Facemock::FbGraph::Application::TestUsers do
       context 'that limit and after are both 1' do
         context 'when user is exist only three' do
           before do
-            user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            user.save!
-            @second_created_user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            @second_created_user.save!
-            user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-            user.save!
+            3.times do
+              Facemock::FbGraph::Application::User.new(application_id: facebook_app_id).save!
+            end
             @options = { limit: 1, after: 1 }
           end
 
@@ -111,7 +109,7 @@ describe Facemock::FbGraph::Application::TestUsers do
             test_users = Facemock::FbGraph::Application::TestUsers.new(facebook_app_id, @options)
             expect(test_users).not_to be_empty
             expect(test_users.count).to eq 1
-            expect(test_users).to include @second_created_user
+            expect(test_users.first).to be_kind_of Facemock::FbGraph::Application::User
           end
         end
       end
@@ -127,26 +125,26 @@ describe Facemock::FbGraph::Application::TestUsers do
 
     it 'should equal self' do
       collection = @test_users.collection
-      expect(collection.first).to eq @test_users.first
       expect(collection.count).to eq @test_users.count
+      test_user = collection.first
+      Facemock::FbGraph::Application::User.column_names.each do |column_name|
+        expect(collection.first.send(column_name)).to eq @test_users.first.send(column_name)
+      end
     end
   end
 
   describe '#next' do
     before do
-      @first_created_user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-      @first_created_user.save!
-      @second_created_user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-      @second_created_user.save!
-      @last_created_user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-      @last_created_user.save!
+      @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: "test_secret")
+      3.times { @app.test_user! }
     end
 
     it 'should get next users array' do
       test_users =  Facemock::FbGraph::Application::TestUsers.new(facebook_app_id, limit: 1)
-      expect(test_users.first).to eq @last_created_user
-      expect(test_users.next.first).to eq @second_created_user
-      expect(test_users.next.next.first).to eq @first_created_user
+      expect(test_users.first).to be_kind_of Facemock::FbGraph::Application::User
+      expect(test_users.next.first).to be_kind_of Facemock::FbGraph::Application::User
+      expect(test_users.next.next.first).to be_kind_of Facemock::FbGraph::Application::User
+      expect(test_users.next.next.next.first).to be_kind_of NilClass
     end
   end
 

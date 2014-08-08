@@ -2,7 +2,7 @@ require 'facemock/fb_graph/application/user'
 
 module Facemock
   module FbGraph
-    class Application < ActiveRecord::Base
+    class Application
       class TestUsers < Array
         DEFAULT_LIMIT = 50
         DEFAULT_AFTER = 0
@@ -13,7 +13,7 @@ module Facemock
           @application_id = application_id
           st = after
           ed = after + limit - 1
-          users = User.where(application_id: application_id).sort_by{|u| u.created_at}
+          users = User.find_all_by_application_id(application_id).sort_by{|u| u.created_at}
           users = users.reverse[st..ed] || []
           super(users)
         end

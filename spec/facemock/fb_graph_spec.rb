@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::FbGraph do
-  let(:db_name) { ".test" }
-
   it 'should have a application class' do
     expect(Facemock::FbGraph::Application).to be_truthy
   end
@@ -14,11 +12,6 @@ describe Facemock::FbGraph do
   it 'should have a user module' do
     expect(Facemock::FbGraph::User).to be_truthy
   end
-
-  before do
-    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-  end
-  after  { Facemock::Config.database.drop }
 
   describe '#on' do
     subject { Facemock::FbGraph.on }

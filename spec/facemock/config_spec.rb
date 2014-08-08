@@ -9,6 +9,8 @@ describe Facemock::Config do
     expect(Facemock::Database).to be_truthy
   end
 
+  before { stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name) }
+
   describe '#default_database' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:connect) { true }
@@ -33,25 +35,13 @@ describe Facemock::Config do
       allow_any_instance_of(Facemock::Database).to receive(:disconnect!) { true }
     end
 
-    context 'without argument' do
-      subject { Facemock::Config.database }
-      it { is_expected.to be_truthy }
+    subject { Facemock::Config.database }
+    it { is_expected.to be_truthy }
 
-      describe '.name' do
-        subject { Facemock::Config.database.name }
-        it { is_expected.not_to be_nil }
-        it { is_expected.not_to be_empty }
-      end
-    end
-
-    context 'with name options' do
-      subject { Facemock::Config.database(db_name) }
-      it { is_expected.to be_truthy }
-
-      describe '.name' do
-        subject { Facemock::Config.database(db_name).name }
-        it { is_expected.to eq db_name }
-      end
+    describe '.name' do
+      subject { Facemock::Config.database.name }
+      it { is_expected.not_to be_nil }
+      it { is_expected.not_to be_empty }
     end
   end
 
@@ -132,8 +122,8 @@ describe Facemock::Config do
           begin
             Facemock::Config.load_users(@path)
           rescue => error
-            expect(Facemock::FbGraph::Application.all).to be_empty
-            expect(Facemock::FbGraph::Application::User.all).to be_empty
+            expect(Facemock::Database::Application.all).to be_empty
+            expect(Facemock::Database::User.all).to be_empty
           end
         end
       end
@@ -186,8 +176,8 @@ describe Facemock::Config do
           app_count  = yaml_load_data.size
           user_count = yaml_load_data.inject(0){|count, data| count += data[:users].size }
           Facemock::Config.load_users(@path)
-          expect(Facemock::FbGraph::Application.all.count).to eq app_count
-          expect(Facemock::FbGraph::Application::User.all.count).to eq user_count
+          expect(Facemock::Database::Application.all.count).to eq app_count
+          expect(Facemock::Database::User.all.count).to eq user_count
         end
       end
     end

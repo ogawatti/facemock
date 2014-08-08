@@ -1,31 +1,35 @@
-require 'active_record'
+require 'sqlite3'
+require 'facemock/database/table'
+require 'facemock/database/application'
+require 'facemock/database/user'
+require 'facemock/database/permission'
 
 module Facemock
   class Database
     ADAPTER = "sqlite3"
     DB_DIRECTORY = File.expand_path("../../../db", __FILE__)
     DEFAULT_DB_NAME = "facemock"
-    TABLE_NAMES = [:applications, :users, :user_rights]
+    TABLE_NAMES = [:applications, :users, :permissions]
 
     attr_reader :name
+    attr_reader :connection
 
     def initialize(name=nil)
-      @name = (name.nil? || name.empty?) ? DEFAULT_DB_NAME : name
+      @name = DEFAULT_DB_NAME
       connect
       create_tables
     end
 
     def connect
-      ActiveRecord::Base.establish_connection(adapter: ADAPTER, database: filepath)
-      connection = ActiveRecord::Base.connection unless ActiveRecord::Base.connected?
-      ActiveRecord::Migration.verbose = false
+      @connection = SQLite3::Database.new filepath
       @state = :connected
-      connection
+      @connection
     end
 
     def disconnect!
-      ActiveRecord::Base.connection.disconnect!
+      @connection.close
       @state = :disconnected
+      nil
     end
       
     def connected?
@@ -35,6 +39,7 @@ module Facemock
     def drop
       disconnect!
       File.delete(filepath) if File.exist?(filepath)
+      nil
     end
 
     def clear
@@ -43,23 +48,22 @@ module Facemock
     end
 
     def create_tables
-      if !File.exist?(filepath) || ActiveRecord::Base.connection.tables.empty?
-        TABLE_NAMES.each do |table_name|
-          unless ActiveRecord::Base.connection.table_exists? table_name
-            self.send "create_#{table_name}_table"
-          end
-        end
+      TABLE_NAMES.each do |table_name|
+        self.send "create_#{table_name}_table" unless table_exists?(table_name)
       end
+      true
+    end
+
+    def drop_table(table_name)
+      return false unless File.exist?(filepath) && table_exists?(table_name)
+      @connection.execute "drop table #{table_name};"
+      true
     end
 
     def drop_tables
-      if File.exist?(filepath) && !ActiveRecord::Base.connection.tables.empty?
-        TABLE_NAMES.each do |table_name|
-          if ActiveRecord::Base.connection.table_exists? table_name
-            ActiveRecord::Migration.drop_table table_name
-          end
-        end
-      end
+      return false unless File.exist?(filepath)
+      TABLE_NAMES.each{|table_name| drop_table(table_name) }
+      true
     end
 
     def filepath
@@ -67,31 +71,52 @@ module Facemock
       File.join(DB_DIRECTORY, "#{@name}.#{ADAPTER}")
     end
 
+    def table_exists?(table_name)
+      tables = @connection.execute "select * from sqlite_master"
+      tables.each do |table|
+        return true if table[1].to_s == table_name.to_s
+      end
+      false
+    end
+
     private
 
     def create_applications_table
-      ActiveRecord::Migration.create_table :applications do |t|
-        t.string  :secret, :null => false
-      end
+      @connection.execute <<-SQL
+        create table applications (
+          id          integer   primary key AUTOINCREMENT,
+          secret      text      not null,
+          created_at  datetime  not null,
+          UNIQUE(secret)
+        );
+      SQL
     end
 
     def create_users_table
-      ActiveRecord::Migration.create_table :users do |t|
-        t.string    :name,           :null => false
-        t.string    :email,          :null => false
-        t.string    :password,       :null => false
-        t.boolean   :installed,      :null => false
-        t.string    :access_token,   :null => false
-        t.integer   :application_id
-        t.timestamp :created_at,     :null => false
-      end
+      @connection.execute <<-SQL
+        create table users (
+          id              integer  primary key AUTOINCREMENT,
+          name            text      not null,
+          email           text      not null,
+          password        text      not null,
+          installed       boolean   not null,
+          access_token    text      not null,
+          application_id  integer   not null,
+          created_at      datetime  not null,
+          UNIQUE(access_token)
+        );
+      SQL
     end
 
-    def create_user_rights_table
-      ActiveRecord::Migration.create_table :user_rights do |t|
-        t.string  :name,    :null => false
-        t.integer :user_id, :null => false
-      end
+    def create_permissions_table
+      @connection.execute <<-SQL
+        create table permissions (
+          id          integer   primary key AUTOINCREMENT,
+          name        text      not null,
+          user_id     integer   not null,
+          created_at  datetime  not null
+        );
+      SQL
     end
   end
 end
