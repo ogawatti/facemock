@@ -14,6 +14,10 @@ module Facemock
         @created_at = opts.created_at
       end
 
+      # 独自実装部分 (ActiveRecordだと主キーはセットしても無視されるっぽい挙動
+      #   @id に値が設定されていない場合はinsert
+      #   @id に値が設定されていて、そのidのレコードが無い場合はinsert
+      #   @id に値が設定されていて、そのidのレコードが有る場合はupdate
       def save!
         if @id && !(self.class.find_by_id(@id).nil?)
           update!
@@ -25,7 +29,7 @@ module Facemock
       def update_attributes!(options)
         # カラムに含まれるかどうかの確認。なければNoMethodError
         options.each_key {|key| self.send(key) }
-        self.update!(options)
+        update!(options)
       end
 
       def destroy
@@ -46,6 +50,26 @@ module Facemock
           end
         end
         self
+      end
+
+      def method_missing(name, *args)
+        method_name = name.to_s.include?("=") ? name.to_s[0...-1].to_sym : name
+        case name
+        when :identifier  then return send(:id)
+        when :identifier= then return send(:id=, *args)
+        else
+          if column_names.include?(method_name) && args.size <= 1
+            if !name.to_s.include?("=") && args.empty?
+              define_column_getter(name)
+              return send(name)
+            else
+              define_column_setter(name)
+              return send(name, args.first)
+            end
+          else
+            super
+          end
+        end
       end
 
       def self.all
@@ -72,36 +96,18 @@ module Facemock
         records_to_objects(records)
       end
 
-      def method_missing(name, *args)
-        method_name = name.to_s.include?("=") ? name.to_s[0...-1].to_sym : name
-        case name
-        when :identifier  then return send(:id)
-        when :identifier= then return send(:id=, *args)
-        else
-          if column_names.include?(method_name) && args.size <= 1
-            if !name.to_s.include?("=") && args.empty?
-              define_column_getter(name)
-              return send(name)
-            else
-              define_column_setter(name)
-              return send(name, args.first)
-            end
-          else
-            super
-          end
-        end
-      end
-
       def self.method_missing(name, *args)
         case name
         when /^find_by_(.+)/
           column_name = $1
-          super unless args.size == 1 && column_names.include?(column_name.to_sym)
+          super unless column_names.include?(column_name.to_sym)
+          raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
           define_find_by_column(column_name)
           send(name, args.first)
         when /^find_all_by_(.+)/
           column_name = $1
-          super unless args.size == 1 && column_names.include?(column_name.to_sym)
+          super unless column_names.include?(column_name.to_sym)
+          raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
           define_find_all_by_column(column_name)
           send(name, args.first)
         else
@@ -132,21 +138,13 @@ module Facemock
         return nil unless record
         options = {}
         column_names.each_with_index do |column_name, index|
-          case column_name
-          when :created_at
-            options[column_name] = Time.parse(record[index])
-          when :installed
-            options[column_name] = eval(record[index])
+          value = record[index]
+
+          options[column_name] = case column_name
+          when :created_at then Time.parse(value)
           else
-            options[column_name] = record[index]
+            ["true", "false"].include?(value) ? eval(value) : value
           end
-=begin
-          if column_name == :created_at
-            options[column_name] = Time.parse(record[index])
-          else
-            options[column_name] = record[index]
-          end
-=end
         end
         self.new(options)
       end
@@ -160,7 +158,12 @@ module Facemock
       def self.define_find_by_column(column_name)
         self.class_eval <<-EOF
           def self.find_by_#{column_name}(value)
-            column_value = (value.kind_of?(String)) ? "'" + value + "'" : value.to_s
+            column_value = case value
+            when String then "'" + value + "'"
+            when Time   then "'" + value.to_s + "'"
+            else value.to_s
+            end
+
             select_string = "select * from #{table_name} where #{column_name} = "
             select_string += column_value + " limit 1";
             records = execute select_string
@@ -169,10 +172,16 @@ module Facemock
         EOF
       end
 
+      # TODO : find_by_*** の方と同じ対応が必要
       def self.define_find_all_by_column(column_name)
         self.class_eval <<-EOF
           def self.find_all_by_#{column_name}(value)
-            column_value = (value.kind_of?(String)) ? "'" + value + "'" : value.to_s
+            column_value = case value
+            when String then "'" + value + "'"
+            when Time   then "'" + value.to_s + "'"
+            else value.to_s
+            end
+
             select_string = "select * from #{table_name} where #{column_name} = "
             select_string += column_value;
             records = execute select_string
@@ -198,7 +207,8 @@ module Facemock
       end
 
       def insert!
-        target_column_names = if [:applications, :users].include?(table_name)
+        # idに値が入っていない場合の救済
+        target_column_names = if self.send(:id)
           column_names
         else
           column_names.select{|name| name != :id}
@@ -217,21 +227,21 @@ module Facemock
         self
       end
 
-      def update!(options)
+      def update!(options={})
+        # TODO : デフォルト値をDBで持つような場合に未対応
+        # save! から叩かれた場合はここを通る。created_atやその他のcolum値を設定する
         if options.empty?
           target_column_names = column_names.select{|name| name != :id}
           target_column_names.each do |column_name|
-            options[column_name] = self.send(column_name) #unless column_name == :created_at
+            options[column_name] = self.send(column_name)
           end
         end
 
         unless options.empty?
           target_key_values = options.inject([]) do |ary, (key, value)|
             ary << case value
-            when String, Time
-              "#{key} = '#{value}'"
-            else
-              "#{key} = #{value}"
+            when String, Time then "#{key} = '#{value}'"
+            else "#{key} = #{value}"  # 継承先向けの実装
             end
           end
 

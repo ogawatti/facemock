@@ -13,7 +13,8 @@ module Facemock
 
       def initialize(options={})
         opts = Hashie::Mash.new(options)
-        @id             = opts.id           || ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
+        @id             = (opts.id.to_i > 0) ? opts.id.to_i : ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
+        #@id             = opts.id.to_i      || ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
         @name           = opts.name         || rand(36**10).to_s(36)
         @email          = opts.email        || name.gsub(" ", "_") + "@example.com"
         @password       = opts.password     || rand(36**10).to_s(36)
