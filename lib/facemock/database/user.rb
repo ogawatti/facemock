@@ -9,12 +9,12 @@ module Facemock
       TABLE_NAME = :users
       COLUMN_NAMES = [:id, :name, :email, :password, :installed, :access_token, :application_id, :created_at]
 
+      # Facemock::FbGraph::Application::Userに持っていけない...?
       attr_reader :permission_objects
 
       def initialize(options={})
         opts = Hashie::Mash.new(options)
         @id             = (opts.id.to_i > 0) ? opts.id.to_i : ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
-        #@id             = opts.id.to_i      || ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
         @name           = opts.name         || rand(36**10).to_s(36)
         @email          = opts.email        || name.gsub(" ", "_") + "@example.com"
         @password       = opts.password     || rand(36**10).to_s(36)

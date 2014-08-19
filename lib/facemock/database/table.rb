@@ -1,6 +1,7 @@
 require 'facemock/database'
 require 'sqlite3'
 require 'hashie'
+require 'pry'
 
 module Facemock
   class Database
@@ -172,7 +173,6 @@ module Facemock
         EOF
       end
 
-      # TODO : find_by_*** の方と同じ対応が必要
       def self.define_find_all_by_column(column_name)
         self.class_eval <<-EOF
           def self.find_all_by_#{column_name}(value)
@@ -207,7 +207,7 @@ module Facemock
       end
 
       def insert!
-        # idに値が入っていない場合の救済
+        # idが指定されていない場合の対応
         target_column_names = if self.send(:id)
           column_names
         else
@@ -231,21 +231,23 @@ module Facemock
         # TODO : デフォルト値をDBで持つような場合に未対応
         # save! から叩かれた場合はここを通る。created_atやその他のcolum値を設定する
         if options.empty?
-          target_column_names = column_names.select{|name| name != :id}
-          target_column_names.each do |column_name|
-            options[column_name] = self.send(column_name)
+          column_names.each do |column_name|
+            if (value = self.send(column_name)) && column_name != :id
+              options[column_name] = value
+            end
           end
         end
 
         unless options.empty?
           target_key_values = options.inject([]) do |ary, (key, value)|
             ary << case value
-            when String, Time then "#{key} = '#{value}'"
-            else "#{key} = #{value}"  # 継承先向けの実装
+            when String, Time          then "#{key} = '#{value}'"
+            when TrueClass, FalseClass then "#{key} = #{((value) ? 1 : 0)}"
             end
           end
 
-          execute "update #{table_name} set #{target_key_values.join(', ')} where id = #{@id};"
+          sql = "update #{table_name} set #{target_key_values.join(', ')} where id = #{@id};"
+          execute sql
         end
         fetch
       end

@@ -401,7 +401,10 @@ describe Facemock::Database::Table do
             it 'should be Table instance' do
               created = Facemock::Database::Table.new.save!
               created_at = created.created_at
-              Facemock::Database::Table.new({created_at: created_at}).save!
+              updated = Facemock::Database::Table.new.save!
+              updated.created_at = created_at
+              updated.save!
+
               tables = Facemock::Database::Table.find_all_by_created_at(created_at)
               expect(tables).to be_kind_of Array
               expect(tables.count).to eq 2
