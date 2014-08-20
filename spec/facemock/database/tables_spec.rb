@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 describe Facemock::Database::Table do
   include TableHelper

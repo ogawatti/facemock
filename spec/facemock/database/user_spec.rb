@@ -173,7 +173,7 @@ describe Facemock::Database::User do
       stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
       Facemock::Config.database
     end
-    after  { Facemock::Config.database.drop }
+    after { Facemock::Config.database.drop }
 
     context 'when already saved' do
       before do
@@ -188,6 +188,23 @@ describe Facemock::Database::User do
         subject { @user.save!.installed }
         it { is_expected.to eq true }
       end
+    end
+  end
+
+  # Facemock::Database::Table#update_attributes!のテスト
+  #  * 複数カラムを更新する
+  #  * 型がIntegerのカラムを更新する
+  describe '#update_attributes!' do
+    context 'with option that have multi attributes' do
+      before do
+        stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+        Facemock::Config.database
+        @permission = Facemock::Database::User.new.save!
+      end
+      after { Facemock::Config.database.drop }
+
+      subject { lambda { @permission.update_attributes!(options) } }
+      it { is_expected.not_to raise_error }
     end
   end
 end

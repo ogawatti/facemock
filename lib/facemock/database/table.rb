@@ -249,6 +249,7 @@ module Facemock
             ary << case value
             when String, Time          then "#{key} = '#{value}'"
             when TrueClass, FalseClass then "#{key} = '#{value}'"
+            else "#{key} = #{value}"
             end
           end
 
