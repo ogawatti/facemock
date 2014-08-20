@@ -1,7 +1,6 @@
 require 'facemock/database'
 require 'sqlite3'
 require 'hashie'
-require 'pry'
 
 module Facemock
   class Database
@@ -38,6 +37,9 @@ module Facemock
         fetch
       end
 
+      # TODO : もうちょっと真面目にやらないと詰む
+      #  * nameに"true"とか指定されると変な値返してしまう
+      #  * 型情報見ながらじゃないとダメ
       def fetch
         records = execute "select * from #{table_name} where id = #{@id} limit 1;"
 
@@ -47,7 +49,11 @@ module Facemock
           if column_names[index] == :created_at
             self.send(method_name, Time.parse(record[index]))
           else
-            self.send(method_name, record[index])
+            if record[index] == "true" || record[index] == "false"
+              self.send(method_name, eval(record[index]))
+            else
+              self.send(method_name, record[index])
+            end
           end
         end
         self
@@ -242,7 +248,7 @@ module Facemock
           target_key_values = options.inject([]) do |ary, (key, value)|
             ary << case value
             when String, Time          then "#{key} = '#{value}'"
-            when TrueClass, FalseClass then "#{key} = #{((value) ? 1 : 0)}"
+            when TrueClass, FalseClass then "#{key} = '#{value}'"
             end
           end
 

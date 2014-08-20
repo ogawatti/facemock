@@ -162,7 +162,6 @@ describe Facemock::Database::User do
 
   # TODO : 実装側のバグ修正(boolean 対応)
   # Facemock::Database::Table#update!中のcase文のelseを通過するテスト
-=begin
   describe '#save!' do
     before do
       stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
@@ -185,5 +184,4 @@ describe Facemock::Database::User do
       end
     end
   end
-=end
 end
