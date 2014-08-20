@@ -1,20 +1,18 @@
 require 'spec_helper'
 
 describe Facemock::FbGraph::Application::TestUsers do
+  let(:db_name)         { ".test" }
+
+  let(:facebook_app_id) { "100000000000000" }
+
   let(:default_limit)   { 50 }
   let(:default_after)   { 0 }
 
-  let(:db_name)         { ".test" }
-  let(:adapter)         { "sqlite3" }
-  let(:db_directory)    { File.expand_path("../../../../db", __FILE__) }
-  let(:db_filepath)     { File.join(db_directory, "#{db_name}.#{adapter}") }
-  let(:facebook_app_id) { "100000000000000" }
-
   before do
     stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-    Facemock::Config.database
+    @database = Facemock::Database.new
   end
-  after { Facemock::Config.database.drop }
+  after { @database.drop }
 
   describe '::DEFAULT_LIMIT' do
     subject { Facemock::FbGraph::Application::TestUsers::DEFAULT_LIMIT }

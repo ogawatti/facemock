@@ -171,9 +171,9 @@ describe Facemock::Database::User do
   describe '#save!' do
     before do
       stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      Facemock::Config.database
+      @database = Facemock::Database.new
     end
-    after { Facemock::Config.database.drop }
+    after { @database.drop }
 
     context 'when already saved' do
       before do
@@ -198,10 +198,10 @@ describe Facemock::Database::User do
     context 'with option that have multi attributes' do
       before do
         stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-        Facemock::Config.database
+        @database = Facemock::Database.new
         @permission = Facemock::Database::User.new.save!
       end
-      after { Facemock::Config.database.drop }
+      after { @database.drop }
 
       subject { lambda { @permission.update_attributes!(options) } }
       it { is_expected.not_to raise_error }

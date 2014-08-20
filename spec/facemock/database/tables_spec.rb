@@ -119,17 +119,17 @@ describe Facemock::Database::Table do
         end
 
         context 'when any column values does not change' do
-          it "should not change created_at value" do
+          it 'should not change created_at value' do
             created_at = @table.created_at
-            @table.update_attributes!({ created_at: @table.created_at })
+            @table.update_attributes!({ created_at: created_at })
             expect(@table.created_at).to eq created_at
           end
         end
 
         context 'when created_at column changes' do
-          it "should change created_at value" do
+          it 'should change created_at value' do
             created_at = @table.created_at + 60
-            @table.update_attributes!({ created_at: created_at})
+            @table.update_attributes!({ created_at: created_at })
             expect(@table.created_at).to eq created_at
           end
         end

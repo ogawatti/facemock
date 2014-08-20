@@ -2,9 +2,7 @@ require 'spec_helper'
 
 describe Facemock::FbGraph::Application::User do
   let(:db_name)       { ".test" }
-  let(:adapter)       { "sqlite3" }
-  let(:db_directory)  { File.expand_path("../../../../db", __FILE__) }
-  let(:db_filepath)   { File.join(db_directory, "#{db_name}.#{adapter}") }
+
   let(:permission1)   { :email }
   let(:permission2)   { :read_stream }
   let(:options)       { { identifier:   100000000000001,
@@ -16,7 +14,7 @@ describe Facemock::FbGraph::Application::User do
                           permissions:  "#{permission1}, #{permission2}" }  }
 
   before { stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name) }
-  after { Facemock::Config.database.drop }
+  after { Facemock::Database.new.drop }
 
   it 'should have a permission class' do
     expect(Facemock::FbGraph::Application::User::Permission).to be_truthy

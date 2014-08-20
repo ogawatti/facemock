@@ -1,14 +1,11 @@
 require 'spec_helper'
 
 describe Facemock::FbGraph::Application do
+  let(:db_name)      { ".test" }
+
   let(:facebook_app_id) { 100000000000000 }
   let(:facebook_app_secret) { "test_secret" }
   let(:access_token) { "access_token" }
-
-  let(:db_name) { ".test" }
-  let(:adapter)       { "sqlite3" }
-  let(:db_directory)  { File.expand_path("../../../../db", __FILE__) }
-  let(:db_filepath)   { File.join(db_directory, "#{db_name}.#{adapter}") }
 
   it 'should have a user class' do
     expect(Facemock::FbGraph::Application::User).to be_truthy
@@ -22,9 +19,9 @@ describe Facemock::FbGraph::Application do
 
   before do
     stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-    Facemock::Config.database
+    @database = Facemock::Database.new
   end
-  after  { Facemock::Config.database.drop }
+  after  { @database.drop }
 
   describe '#new' do
     context 'without argument' do

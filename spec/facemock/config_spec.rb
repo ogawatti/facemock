@@ -54,13 +54,13 @@ describe Facemock::Config do
     context 'when already set database' do
       before do
         stub_const("Facemock::Database::DEFAULT_DATABASE_NAME", db_name)
-        Facemock::Config.database
+        @database = Facemock::Database.new
       end
 
       subject { Facemock::Config.reset_database }
       it { is_expected.to eq nil }
 
-      after { Facemock::Config.database.drop }
+      after { @database.drop }
     end
   end
 
@@ -98,9 +98,9 @@ describe Facemock::Config do
     context 'with yaml file path' do
       before do
         stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-        Facemock::Config.database
+        @database = Facemock::Database.new
       end
-      after  { Facemock::Config.database.drop }
+      after  { @database.drop }
 
       context 'but file does not exist' do
         subject { lambda { Facemock::Config.load_users("testdata.yml") } }
