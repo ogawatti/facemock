@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'pry'
 
 describe Facemock::Database::Table do
+  include TableHelper
+
   let(:db_name)         { ".test" }
   let(:table_name)      { :tables }
   let(:column_names)    { [:id, :created_at] }
@@ -16,17 +18,6 @@ describe Facemock::Database::Table do
     it { is_expected.to eq column_names }
   end
 
-  def create_tables_table_for_test
-    db = Facemock::Database.new
-    db.connection.execute <<-SQL
-      create table #{table_name} (
-        id          integer   primary key AUTOINCREMENT,
-        created_at  datetime  not null
-      );
-    SQL
-    db.disconnect!
-  end
-
   before do
     stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
     create_tables_table_for_test
@@ -34,32 +25,8 @@ describe Facemock::Database::Table do
 
   after do
     Facemock::Database.new.drop
-
-    # テストで定義したクラスメソッドを削除
-    Facemock::Database::Table.methods.each do |method_name|
-      if method_name.to_s =~ /^find_by_/ || method_name.to_s =~ /^find_all_by_/
-        Facemock::Database::Table.class_eval do
-          class_variable_set(:@@target_method_name, method_name)
-          class << self
-            remove_method class_variable_get(:@@target_method_name)
-          end
-          remove_class_variable(:@@target_method_name)
-        end
-      end
-    end
-
-    # テストで定義したインスタンスメソッドを削除
-    column_names.each do |column_name|
-      getter = column_name
-      if Facemock::Database::Table.instance_methods.include?(getter)
-        Facemock::Database::Table.class_eval { remove_method getter }
-      end
-
-      setter = (column_name.to_s + "=").to_sym
-      if Facemock::Database::Table.instance_methods.include?(setter)
-        Facemock::Database::Table.class_eval { remove_method setter }
-      end
-    end
+    remove_dynamically_defined_class_method(Facemock::Database::Table)
+    remove_dynamically_defined_instance_method(Facemock::Database::Table)
   end
 
   describe '#initialize' do

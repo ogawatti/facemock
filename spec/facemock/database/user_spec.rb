@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Facemock::Database::User do
+  include TableHelper
+
   let(:db_name)         { ".test" }
   let(:table_name)      { :users }
   let(:column_names)    { [ :id,
@@ -28,6 +30,11 @@ describe Facemock::Database::User do
                            access_token:   access_token,
                            application_id: application_id,
                            created_at:     created_at } }
+
+  after do
+    remove_dynamically_defined_class_method(Facemock::Database::User)
+    remove_dynamically_defined_instance_method(Facemock::Database::User)
+  end
 
   describe '::TABLE_NAME' do
     subject { Facemock::Database::User::TABLE_NAME }
@@ -160,7 +167,6 @@ describe Facemock::Database::User do
     end
   end
 
-  # TODO : 実装側のバグ修正(boolean 対応)
   # Facemock::Database::Table#update!中のcase文のelseを通過するテスト
   describe '#save!' do
     before do
