@@ -46,7 +46,6 @@ describe Facemock::FbGraph::Application do
     context 'with facebook app id and secret' do
       before do
         options = { secret: facebook_app_secret }
-        Facemock::FbGraph.on
         @app = Facemock::FbGraph::Application.new(facebook_app_id, options)
       end
 

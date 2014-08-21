@@ -29,12 +29,13 @@ module TableHelper
     end
   end
 
+  # Tableクラスでテストするために、一時的にDB Tableを作成する
   def create_tables_table_for_test
     db = Facemock::Database.new
     db.connection.execute <<-SQL
-      create table tables (
-        id          integer   primary key AUTOINCREMENT,
-        created_at  datetime  not null
+      CREATE TABLE TABLES (
+        id          INTEGER   PRIMARY KEY AUTOINCREMENT,
+        created_at  DATETIME  NOT NULL
       );
     SQL
     db.disconnect!

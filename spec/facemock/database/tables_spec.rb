@@ -443,4 +443,70 @@ describe Facemock::Database::Table do
       end
     end
   end
+
+  describe '.table_info' do
+    subject { Facemock::Database::Table.table_info }
+    it { is_expected.to be_kind_of Hashie::Mash }
+
+    it 'has keys that is id and created_at' do
+      table_info = Facemock::Database::Table.table_info
+      table_info.each_keys do |key|
+        expect(key.to_sym).to include column_names
+      end
+    end
+
+    context 'then keys' do
+      before { @table_info = Facemock::Database::Table.table_info }
+
+      describe '#id' do
+        subject { @table_info.id }
+        it { is_expected.to be_kind_of Hashie::Mash }
+
+        it 'should have column_info' do
+          expect(@table_info.id.cid).to eq 0
+          expect(@table_info.id.name).to eq :id
+          expect(@table_info.id.type).to eq "INTEGER"
+          expect(@table_info.id.notnull).to eq false
+          expect(@table_info.id.dflt_value).to be_nil
+          expect(@table_info.id.pk).to eq true
+        end
+      end
+        
+      describe '#created_at' do
+        subject { @table_info.created_at }
+        it { is_expected.to be_kind_of Hashie::Mash }
+
+        it 'should have column_info' do
+          expect(@table_info.created_at.cid).to eq 1
+          expect(@table_info.created_at.name).to eq :created_at
+          expect(@table_info.created_at.type).to eq "DATETIME"
+          expect(@table_info.created_at.notnull).to eq true
+          expect(@table_info.created_at.dflt_value).to be_nil
+          expect(@table_info.created_at.pk).to eq false
+        end
+      end
+    end
+  end
+
+  describe '.column_type' do
+    context 'without argument' do
+      subject { lambda { Facemock::Database::Table.column_type } }
+      it { is_expected.to raise_error ArgumentError }
+    end
+
+    context 'with not column name' do
+      subject { Facemock::Database::Table.column_type(:hoge) }
+      it { is_expected.to be_nil }
+    end
+
+    context 'with id' do
+      subject { Facemock::Database::Table.column_type(:id) }
+      it { is_expected.to eq "INTEGER" }
+    end
+
+    context 'with created_at' do
+      subject { Facemock::Database::Table.column_type(:created_at) }
+      it { is_expected.to eq "DATETIME" }
+    end
+  end
 end

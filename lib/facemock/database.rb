@@ -83,10 +83,10 @@ module Facemock
 
     def create_applications_table
       @connection.execute <<-SQL
-        create table applications (
-          id          integer   primary key AUTOINCREMENT,
-          secret      text      not null,
-          created_at  datetime  not null,
+        CREATE TABLE applications (
+          id          INTEGER   PRIMARY KEY AUTOINCREMENT,
+          secret      TEXT      NOT NULL,
+          created_at  DATETIME  NOT NULL,
           UNIQUE(secret)
         );
       SQL
@@ -94,27 +94,26 @@ module Facemock
 
     def create_users_table
       @connection.execute <<-SQL
-        create table users (
-          id              integer  primary key AUTOINCREMENT,
-          name            text      not null,
-          email           text      not null,
-          password        text      not null,
-          installed       boolean   not null,
-          access_token    text      not null,
-          application_id  integer   not null,
-          created_at      datetime  not null,
-          UNIQUE(access_token)
-        );
+        CREATE TABLE users (
+          id              INTEGER  PRIMARY KEY AUTOINCREMENT,
+          name            TEXT      NOT NULL,
+          email           TEXT      NOT NULL,
+          password        TEXT      NOT NULL,
+          installed       BOOLEAN   NOT NULL,
+          access_token    TEXT      NOT NULL,
+          application_id  INTEGER   NOT NULL,
+          created_at      DATETIME  NOT NULL,
+          UNIQUE(access_token));
       SQL
     end
 
     def create_permissions_table
       @connection.execute <<-SQL
-        create table permissions (
-          id          integer   primary key AUTOINCREMENT,
-          name        text      not null,
-          user_id     integer   not null,
-          created_at  datetime  not null
+        CREATE TABLE permissions (
+          id          INTEGER   PRIMARY KEY AUTOINCREMENT,
+          name        TEXT      NOT NULL,
+          user_id     INTEGER   NOT NULL,
+          created_at  DATETIME  NOT NULL
         );
       SQL
     end

@@ -10,22 +10,20 @@ module Facemock
 
       def initialize(options={})
         opts = Hashie::Mash.new(options)
-        @id = opts.id
-        @created_at = opts.created_at
+        self.id = opts.id
+        self.created_at = opts.created_at
       end
 
-      # 独自実装部分 (ActiveRecordだと主キーはセットしても無視されるっぽい挙動
-      #   @id に値が設定されていない場合はinsert
-      #   @id に値が設定されていて、そのidのレコードが無い場合はinsert
-      #   @id に値が設定されていて、そのidのレコードが有る場合はupdate
+      # TODO : 戻り値はtrueのみ。他はraise
       def save!
-        if @id && !(self.class.find_by_id(@id).nil?)
+        if self.id && !(self.class.find_by_id(self.id).nil?)
           update!
         else
           insert!
         end
       end
 
+      # TODO : 戻り値はtrueのみ。他はraise
       def update_attributes!(options)
         # カラムに含まれるかどうかの確認。なければNoMethodError
         options.each_key {|key| self.send(key) }
@@ -33,29 +31,15 @@ module Facemock
       end
 
       def destroy
-        execute "delete from #{table_name} where id = #{@id};"
+        execute "DELETE FROM #{table_name} WHERE ID = #{self.id};"
         fetch
       end
 
-      # TODO : もうちょっと真面目にやらないと詰む
-      #  * nameに"true"とか指定されると変な値返してしまう
-      #  * 型情報見ながらじゃないとダメ
       def fetch
-        records = execute "select * from #{table_name} where id = #{@id} limit 1;"
-
+        sql = "SELECT * FROM #{table_name} WHERE ID = #{self.id} LIMIT 1;"
+        records = execute sql
         return nil unless record = records.first
-        (0...column_names.size).each do |index|
-          method_name = column_names[index].to_s + "="
-          if column_names[index] == :created_at
-            self.send(method_name, Time.parse(record[index]))
-          else
-            if record[index] == "true" || record[index] == "false"
-              self.send(method_name, eval(record[index]))
-            else
-              self.send(method_name, record[index])
-            end
-          end
-        end
+        set_attributes_from_record(record)
         self
       end
 
@@ -80,17 +64,17 @@ module Facemock
       end
 
       def self.all
-        records = execute "select * from #{table_name};"
+        records = execute "SELECT * FROM #{table_name};"
         records_to_objects(records)
       end
 
       def self.first
-        records = execute "select * from #{table_name} limit 1;"
+        records = execute "SELECT * FROM #{table_name} LIMIT 1;"
         record_to_object(records.first)
       end
 
       def self.last
-        records = execute "select * from #{table_name} order by id desc limit 1 ;"
+        records = execute "SELECT * FROM #{table_name} ORDER BY ID DESC LIMIT 1 ;"
         record_to_object(records.first)
       end
 
@@ -99,7 +83,7 @@ module Facemock
         value = column.values.first
         column_value = (value.kind_of?(String)) ? "'" + value + "'" : value.to_s
 
-        records = execute "select * from #{table_name} where #{column_name} = #{column_value};"
+        records = execute "SELECT * FROM #{table_name} WHERE #{column_name} = #{column_value};"
         records_to_objects(records)
       end
 
@@ -122,44 +106,92 @@ module Facemock
         end
       end
 
+      def table_name
+        self.class.table_name
+      end
+
+      def column_names
+        self.class.column_names
+      end
+
+      def self.table_name
+        self::TABLE_NAME
+      end
+
+      def self.column_names
+        self::COLUMN_NAMES
+      end
+
+      def self.column_type(column_name)
+        return nil unless column_names.include?(column_name.to_s.to_sym)
+        table_info.send(column_name).type
+      end
+
+      def self.table_info
+        sql = "PRAGMA TABLE_INFO(#{table_name});"
+        records = execute sql
+        info = Hashie::Mash.new
+        records.each do |record|
+          column_info = Hashie::Mash.new(
+            { cid:         record[0],
+              name:        record[1].to_sym,
+              type:        record[2],
+              notnull:    (record[3] == 1),
+              dflt_value:  record[4],
+              pk:         (record[5] == 1) }
+          )
+          info.send(record[1] + "=", column_info)
+        end
+        info
+      end
+
       private
 
       def execute(sql)
         self.class.execute(sql)
       end
 
-      # WANT : executeした結果をhashにしたい。扱いにくい
       def self.execute(sql)
-        @db = Facemock::Database.new
-        records = @db.connection.execute sql
-        if records.empty? && sql =~ /^insert /
-          records = @db.connection.execute <<-SQL
-            select * from #{table_name} where ROWID = last_insert_rowid();
+        database = Facemock::Database.new
+        records = database.connection.execute sql
+        if records.empty? && sql =~ /^INSERT /
+          records = database.connection.execute <<-SQL
+            SELECT * FROM #{table_name} WHERE ROWID = last_insert_rowid();
           SQL
         end
-        @db.disconnect!
+        database.disconnect!
         records
       end
 
       def self.record_to_object(record)
         return nil unless record
-        options = {}
-        column_names.each_with_index do |column_name, index|
-          value = record[index]
-
-          options[column_name] = case column_name
-          when :created_at then Time.parse(value)
-          else
-            ["true", "false"].include?(value) ? eval(value) : value
-          end
-        end
-        self.new(options)
+        self.new(record_to_hash(record))
       end
 
       def self.records_to_objects(records)
         records.inject([]) do |objects, record|
           objects << record_to_object(record)
         end
+      end
+
+      def record_to_hash(record)
+        self.class.record_to_hash(record)
+      end
+
+      # 以下の形式のHashが返される
+      #   { id: x, ..., created_at: yyyy-mm-dd :hh:mm +xxxx }
+      def self.record_to_hash(record)
+        hash = Hashie::Mash.new
+        column_names.each_with_index do |column_name, index|
+          value = (record[index] == "") ? nil : record[index]
+          parsed_value = case column_type(column_name)
+          when "BOOLEAN" then eval(value)
+          when "DATETIME" then Time.parse(value)
+          else  value
+          end
+          hash.send(column_name.to_s + "=", parsed_value)
+        end
+        hash
       end
 
       def self.define_find_by_column(column_name)
@@ -171,9 +203,9 @@ module Facemock
             else value.to_s
             end
 
-            select_string = "select * from #{table_name} where #{column_name} = "
-            select_string += column_value + " limit 1";
-            records = execute select_string
+            sql  = "SELECT * FROM #{table_name} WHERE #{column_name} = "
+            sql += column_value + " LIMIT 1;"
+            records = execute sql
             record_to_object(records.first)
           end
         EOF
@@ -188,9 +220,9 @@ module Facemock
             else value.to_s
             end
 
-            select_string = "select * from #{table_name} where #{column_name} = "
-            select_string += column_value;
-            records = execute select_string
+            sql  = "SELECT * FROM #{table_name} WHERE #{column_name} = "
+            sql += column_value + ";"
+            records = execute sql
             records_to_objects(records)
           end
         EOF
@@ -214,7 +246,7 @@ module Facemock
 
       def insert!
         # idが指定されていない場合の対応
-        target_column_names = if self.send(:id)
+        target_column_names = if self.id
           column_names
         else
           column_names.select{|name| name != :id}
@@ -227,52 +259,38 @@ module Facemock
         values  = target_column_values.join(", ")
         columns = target_column_names.join(', ')
 
-        records = execute "insert into #{table_name}(#{columns}) values ( #{values} );"
-        @id = records.first.first
-        @created_at = Time.parse(records.first.last)
+        sql = "INSERT INTO #{table_name}(#{columns}) VALUES ( #{values} );"
+        records = execute sql
+        set_attributes_from_record(records.first)
         self
       end
 
       def update!(options={})
-        # TODO : デフォルト値をDBで持つような場合に未対応
         # save! から叩かれた場合はここを通る。created_atやその他のcolum値を設定する
         if options.empty?
           column_names.each do |column_name|
             if (value = self.send(column_name)) && column_name != :id
-              options[column_name] = value
+              options[column_name] = value unless options.nil?
             end
           end
         end
 
         unless options.empty?
           target_key_values = options.inject([]) do |ary, (key, value)|
-            ary << case value
-            when String, Time          then "#{key} = '#{value}'"
-            when TrueClass, FalseClass then "#{key} = '#{value}'"
-            else "#{key} = #{value}"
-            end
+            ary << (value.kind_of?(Integer) ? "#{key} = #{value}" : "#{key} = '#{value}'")
           end
-
-          sql = "update #{table_name} set #{target_key_values.join(', ')} where id = #{@id};"
+          sql = "UPDATE #{table_name} SET #{target_key_values.join(', ')} WHERE ID = #{self.id};"
           execute sql
         end
         fetch
       end
 
-      def table_name
-        self.class.table_name
-      end
-
-      def column_names
-        self.class.column_names
-      end
-
-      def self.table_name
-        self::TABLE_NAME
-      end
-
-      def self.column_names
-        self::COLUMN_NAMES
+      def set_attributes_from_record(record)
+        hash = record_to_hash(record)
+        column_names.each do |column_name|
+          method_name = column_name.to_s + "="
+          self.send(method_name, hash.send(column_name))
+        end
       end
     end
   end

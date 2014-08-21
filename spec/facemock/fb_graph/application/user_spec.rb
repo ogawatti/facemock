@@ -106,7 +106,7 @@ describe Facemock::FbGraph::Application::User do
       end
     end
 
-    context 'whenn new with permissions option' do
+    context 'when new with permissions option' do
       before { @user = Facemock::FbGraph::Application::User.new(options) }
 
       it 'should create permission' do
