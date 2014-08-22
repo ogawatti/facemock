@@ -25,7 +25,7 @@ describe Facemock do
     expect(Facemock::Errors).to be_truthy
   end
 
-  describe '#on' do
+  describe '.on' do
     subject { Facemock.on }
     it { is_expected.to be_truthy }
 
@@ -36,7 +36,7 @@ describe Facemock do
     end
   end
 
-  describe '#off' do
+  describe '.off' do
     subject { Facemock.off }
     it { is_expected.to be_truthy }
 
@@ -54,6 +54,21 @@ describe Facemock do
         subject { ::FbGraph }
         it { is_expected.to eq FbGraph }
       end
+    end
+  end
+
+  describe '.on?' do
+    context 'when Facemock.off' do
+      before { Facemock.off }
+      subject { Facemock.on? }
+      it { is_expected.to be true }
+    end
+
+    context 'when Facemock.on' do
+      before { Facemock.on }
+      after { Facemock.off }
+      subject { Facemock.on? }
+      it { is_expected.to be true }
     end
   end
 end

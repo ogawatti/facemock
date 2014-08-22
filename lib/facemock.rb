@@ -12,4 +12,8 @@ module Facemock
   def off
     Facemock::FbGraph.off
   end
+
+  def on?
+    FbGraph == Facemock::FbGraph
+  end
 end
