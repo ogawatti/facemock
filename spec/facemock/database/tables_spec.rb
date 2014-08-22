@@ -5,17 +5,7 @@ describe Facemock::Database::Table do
 
   let(:db_name)         { ".test" }
   let(:table_name)      { :tables }
-  let(:column_names)    { [:id, :created_at] }
-
-  describe '::TABLE_NAME' do
-    subject { Facemock::Database::Table::TABLE_NAME }
-    it { is_expected.to eq table_name }
-  end
-
-  describe '::COLUMN_NAMES' do
-    subject { Facemock::Database::Table::COLUMN_NAMES }
-    it { is_expected.to eq column_names }
-  end
+  let(:column_names)    { [:id, :text, :active, :number, :created_at] }
 
   before do
     stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
@@ -28,17 +18,37 @@ describe Facemock::Database::Table do
     remove_dynamically_defined_instance_method(Facemock::Database::Table)
   end
 
+  describe '::TABLE_NAME' do
+    subject { Facemock::Database::Table::TABLE_NAME }
+    it { is_expected.to eq table_name }
+  end
+
+  describe '::COLUMN_NAMES' do
+    subject { Facemock::Database::Table::COLUMN_NAMES }
+    it { is_expected.to eq column_names }
+  end
+
   describe '#initialize' do
     context 'without option' do
       it 'should have accessor of column' do
         @table = Facemock::Database::Table.new
         column_names.each do |column_name|
-           expect(@table.send(column_name)).to be_nil
+           if column_name == :active
+             expect(@table.send(column_name)).to be false
+           else
+             expect(@table.send(column_name)).to be_nil
+           end
         end
 
         @table.id = id = 1
+        @table.text = text = "test"
+        @table.active = active = true
+        @table.number = number = 0
         @table.created_at = created_at = Time.now
         expect(@table.id).to eq id
+        expect(@table.text).to eq text
+        expect(@table.active).to eq active
+        expect(@table.number).to eq number
         expect(@table.created_at).to eq created_at 
 
         expect(lambda{ @table.name }).to raise_error NoMethodError
@@ -48,10 +58,11 @@ describe Facemock::Database::Table do
 
     context 'with option' do
       it 'should have accessor of column' do
-        options = { id: 1 }
+        options = { id: 1, text: "test", active: true, number: 0, created_at: Time.now }
         @table = Facemock::Database::Table.new(options)
-        expect(@table.id).to eq options[:id]
-        expect(@table.created_at).to be_nil
+        options.each_key do |key|
+          expect(@table.send(key)).to eq options[key]
+        end
       end
     end
   end
@@ -59,49 +70,123 @@ describe Facemock::Database::Table do
   describe '#save!' do
     before { @table = Facemock::Database::Table.new }
 
-    context 'when id is nil' do
-      it 'should insert table record to database' do
-        @table.save!
-        expect(@table.id).to be > 0
-        expect(@table.created_at).to be <= Time.now
-      end
-
-      it 'should return table object' do
-        table = @table.save!
-        expect(table).to be_kind_of Facemock::Database::Table
-        expect(table.id).to be > 0
-        expect(table.created_at).to be <= Time.now
-      end
-    end
-
-    context 'when id is specified but record does not exist' do
-      before { @table.id = @id = 1 }
-
-      it 'should insert table record to database' do
-        @table.save!
-        expect(@table.id).to eq @id
-        expect(@table.created_at).to be <= Time.now
-      end
-    end
-
-    context 'when id is specified and record exists' do
-      before { @table.save! }
-
+    context 'when text does not set value' do
       subject { lambda { @table.save! } }
-      it { is_expected.not_to raise_error }
+      it { is_expected.to raise_error }
+    end
 
-      it 'should not change id and created_at' do
-        id = @table.id
-        created_at = @table.created_at
-        @table.save!
-        expect(@table.id).to eq id
-        expect(@table.created_at).to eq created_at
+    context 'when text and number set value' do
+      before do
+        @table.text   = @text   = "test"
+        @table.number = @number = 0
+      end
+
+      context 'without option' do
+        context 'when id and created_at are nil' do
+          it 'should set value to id and created_at' do
+            expect(@table.id).to be_nil
+            expect(@table.text).to eq @text
+            expect(@table.active).to eq false
+            expect(@table.number).to eq @number
+            expect(@table.created_at).to be_nil
+            @table.save!
+            expect(@table.id).to be > 0
+            expect(@table.text).to eq @text
+            expect(@table.active).to eq false
+            expect(@table.number).to eq @number
+            expect(@table.created_at).to be <= Time.now
+          end
+        end
+
+        context 'when id is specified but record does not exist' do
+          before { @table.id = @id = 1 }
+
+          it 'should set value to created_at and id does not change' do
+            expect(@table.id).to eq @id
+            expect(@table.text).to eq @text
+            expect(@table.active).to eq false
+            expect(@table.number).to eq @number
+            expect(@table.created_at).to be_nil
+            @table.save!
+            expect(@table.id).to eq @id
+            expect(@table.text).to eq @text
+            expect(@table.active).to eq false
+            expect(@table.number).to eq @number
+            expect(@table.created_at).to be <= Time.now
+          end
+        end
+
+        context 'when id is specified and record exists' do
+          before { @table.save! }
+
+          it 'should not change id and created_at' do
+            id = @table.id
+            created_at = @table.created_at
+            @table.save!
+            expect(@table.id).to eq id
+            expect(@table.created_at).to eq created_at
+          end
+        end
+      end
+
+      context 'with option' do
+        context 'that are id and text, active, number, created_at' do
+          context 'instance attributes does not set values without text' do
+            before do
+              @id = 100
+              @text = "hogehoge"
+              @active = true
+              @number = 0
+              @created_at = Time.now + 1000
+              @options = { id: @id, text: @text, active: @active, number: @number, created_at: @created_at }
+            end
+
+            it 'should set specified value by option withou created_at' do
+              @table.save!(@options)
+              expect(@table.id).to eq @id
+              expect(@table.text).to eq @text
+              expect(@table.active).to eq @active
+              expect(@table.number).to eq @number
+              expect(@table.created_at).not_to eq @created_at
+            end
+          end
+
+          context 'instance all attributes set values' do
+            before do
+              @table.id = @setting_id = 10
+              @setting_text = @text
+              @setting_active = @active
+              @setting_number = @number
+              @table.created_at = @setting_created_at = Time.now - 1000
+              @options_id = 100
+              @options_text = "hogehoge"
+              @options_active = false
+              @options_number = 1
+              @options_created_at = Time.now + 1000
+              @options = { id: @options_id,
+                           text: @options_text,
+                           active: @options_active,
+                           number: @options_number,
+                           created_at: @options_created_at }
+            end
+
+            it 'should set specified value by option withou created_at' do
+              @table.save!(@options)
+              expect(@table.id).to eq @options_id
+              expect(@table.text).to eq @options_text
+              expect(@table.active).to eq @options_active
+              expect(@table.number).to eq @options_number
+              expect(@table.created_at).not_to eq @options_created_at
+              expect(@table.created_at).not_to eq @setting_created_at
+            end
+          end
+        end
       end
     end
   end
 
   describe '#update_attributes!' do
-    before { @table = Facemock::Database::Table.new }
+    before { @table = Facemock::Database::Table.new({text: "test", number: 1}) }
 
     context 'without options' do
       subject { lambda { @table.update_attributes! } }
@@ -109,8 +194,63 @@ describe Facemock::Database::Table do
     end
 
     context 'with options' do
+      context 'before save!' do
+        subject { @table.update_attributes!({ created_at: Time.now }) }
+        it { is_expected.to eq true }
+
+        context 'that does not include column name' do
+          before { @options = { hoge: "hoge" } }
+          subject { lambda { @table.update_attributes!(@options) } }
+          it { is_expected.to raise_error NoMethodError }
+        end
+
+        context 'that is id' do
+          it 'should set specified value by option' do
+            id = 100
+            @table.update_attributes!({ id: id })
+            expect(id).to eq id
+          end
+
+          it 'should set specified value by option when instance id is set' do
+            @table.id = 10
+            id = 100
+            @table.update_attributes!({ id: id })
+            expect(id).to eq id
+          end
+        end
+
+        context 'that is text' do
+          context 'but instance does not set value to text' do
+            it 'should change created_at value' do
+              table = Facemock::Database::Table.new
+              expect(lambda { table.update_attributes!({ text: "test" }) }).to raise_error
+            end
+          end
+
+          context 'but instance is set value to text' do
+            it 'should not change created_at value' do
+              text = "text"
+              table = Facemock::Database::Table.new({ text: text, number: 1 })
+              table.update_attributes!({ text: text })
+              expect(table.text).to eq text
+            end
+          end
+        end
+
+        context 'that is created_at' do
+          it 'should ignore the value' do
+            created_at = Time.now + 60
+            @table.update_attributes!({ created_at: created_at })
+            expect(@table.created_at).not_to eq created_at
+          end
+        end
+      end
+
       context 'after save!' do
         before { @table.save! }
+
+        subject { @table.update_attributes!({ created_at: @table.created_at + 60 }) }
+        it { is_expected.to eq true }
 
         context 'with option that does not include column name' do
           before { @options = { hoge: "hoge" } }
@@ -137,8 +277,30 @@ describe Facemock::Database::Table do
     end
   end
 
+  describe '#persisted?' do
+    before do
+      @table = Facemock::Database::Table.new({ text: "test", number: 1 })
+    end
+
+    context 'before save' do
+      subject { @table.persisted? }
+      it { is_expected.to be false }
+    end
+
+    context 'after save' do
+      before { @table.save! }
+      subject { @table.persisted? }
+      it { is_expected.to be true }
+    end
+  end
+
   describe '#destroy!' do
-    before { @table = Facemock::Database::Table.new }
+    before { @table = Facemock::Database::Table.new({ text: "test", number: 1 }) }
+
+    context 'before record is saved' do
+      subject { lambda { @table.destroy } }
+      it { is_expected.to raise_error RuntimeError }
+    end
 
     context 'after records is saved' do
       before { @table.save! }
@@ -149,7 +311,7 @@ describe Facemock::Database::Table do
     context 'when tables table has two record' do
       before do
         @table.save!
-        Facemock::Database::Table.new.save!
+        Facemock::Database::Table.new({text: "test", number: 1}).save!
       end
 
       it 'should delete one record' do
@@ -172,7 +334,8 @@ describe Facemock::Database::Table do
     context 'when tables record exists' do
       before do
         @ids = 3.times.inject([]) do |ary, i| 
-          table = Facemock::Database::Table.new.save!
+          table = Facemock::Database::Table.new({text: "test", number: 1})
+          table.save!
           ary << table.id
         end
       end
@@ -198,7 +361,8 @@ describe Facemock::Database::Table do
     context 'when tables record exists' do
       before do
         @ids = 3.times.inject([]) do |ary, i| 
-          table = Facemock::Database::Table.new.save!
+          table = Facemock::Database::Table.new({text: "test", number: 1})
+          table.save!
           ary << table.id
         end
       end
@@ -220,7 +384,8 @@ describe Facemock::Database::Table do
     context 'when tables record exists' do
       before do
         @ids = 3.times.inject([]) do |ary, i| 
-          table = Facemock::Database::Table.new.save!
+          table = Facemock::Database::Table.new({text: "test", number: 1})
+          table.save!
           ary << table.id
         end
       end
@@ -243,7 +408,8 @@ describe Facemock::Database::Table do
     context 'when tables record exists' do
       before do
         @ids = 3.times.inject([]) do |ary, i| 
-          table = Facemock::Database::Table.new.save!
+          table = Facemock::Database::Table.new({text: "test", number: 1})
+          table.save!
           ary << table.id
         end
       end
@@ -298,7 +464,8 @@ describe Facemock::Database::Table do
 
           context 'when record exists' do
             it 'should be Table instance' do
-              created = Facemock::Database::Table.new.save!
+              created = Facemock::Database::Table.new({text: "test", number: 1})
+              created.save!
               finded  = Facemock::Database::Table.find_by_id(created.id)
               expect(finded).to be_kind_of Facemock::Database::Table
               expect(finded.id).to eq created.id
@@ -324,7 +491,8 @@ describe Facemock::Database::Table do
 
           context 'when record exists' do
             it 'should be Table instance' do
-              created = Facemock::Database::Table.new.save!
+              created = Facemock::Database::Table.new({text: "test", number: 1})
+              created.save!
               finded  = Facemock::Database::Table.find_by_created_at(created.created_at)
               expect(finded).to be_kind_of Facemock::Database::Table
               expect(finded.id).to eq created.id
@@ -357,7 +525,8 @@ describe Facemock::Database::Table do
 
           context 'when record exists' do
             it 'should be array and should have only one Table instances' do
-              created = Facemock::Database::Table.new.save!
+              created = Facemock::Database::Table.new({text: "test", number: 1})
+              created.save!
               tables  = Facemock::Database::Table.find_all_by_id(created.id)
               expect(tables).to be_kind_of Array
               expect(tables.count).to eq 1
@@ -385,9 +554,11 @@ describe Facemock::Database::Table do
 
           context 'when record exists' do
             it 'should be Table instance' do
-              created = Facemock::Database::Table.new.save!
+              created = Facemock::Database::Table.new({text: "test", number: 1})
+              created.save!
               created_at = created.created_at
-              updated = Facemock::Database::Table.new.save!
+              updated = Facemock::Database::Table.new({text: "test", number: 1})
+              updated.save!
               updated.created_at = created_at
               updated.save!
 
@@ -406,7 +577,10 @@ describe Facemock::Database::Table do
   end
 
   describe '#method_missing' do
-    before { @table = Facemock::Database::Table.new.save! }
+    before do
+      @table = Facemock::Database::Table.new({text: "test", number: 1})
+      @table.save!
+    end
 
     context 'when method is getter' do
       describe '#id' do
@@ -471,13 +645,55 @@ describe Facemock::Database::Table do
           expect(@table_info.id.pk).to eq true
         end
       end
+
+      describe '#text' do
+        subject { @table_info.created_at }
+        it { is_expected.to be_kind_of Hashie::Mash }
+
+        it 'should have column_info' do
+          expect(@table_info.text.cid).to eq 1
+          expect(@table_info.text.name).to eq :text
+          expect(@table_info.text.type).to eq "TEXT"
+          expect(@table_info.text.notnull).to eq true
+          expect(@table_info.text.dflt_value).to be_nil
+          expect(@table_info.text.pk).to eq false
+        end
+      end
+        
+      describe '#active' do
+        subject { @table_info.active }
+        it { is_expected.to be_kind_of Hashie::Mash }
+
+        it 'should have column_info' do
+          expect(@table_info.active.cid).to eq 2
+          expect(@table_info.active.name).to eq :active
+          expect(@table_info.active.type).to eq "BOOLEAN"
+          expect(@table_info.active.notnull).to eq false
+          expect(@table_info.active.dflt_value).to be_nil
+          expect(@table_info.active.pk).to eq false
+        end
+      end
+
+      describe '#number' do
+        subject { @table_info.number }
+        it { is_expected.to be_kind_of Hashie::Mash }
+
+        it 'should have column_info' do
+          expect(@table_info.number.cid).to eq 3
+          expect(@table_info.number.name).to eq :number
+          expect(@table_info.number.type).to eq "INTEGER"
+          expect(@table_info.number.notnull).to eq true
+          expect(@table_info.number.dflt_value).to be_nil
+          expect(@table_info.number.pk).to eq false
+        end
+      end
         
       describe '#created_at' do
         subject { @table_info.created_at }
         it { is_expected.to be_kind_of Hashie::Mash }
 
         it 'should have column_info' do
-          expect(@table_info.created_at.cid).to eq 1
+          expect(@table_info.created_at.cid).to eq 4
           expect(@table_info.created_at.name).to eq :created_at
           expect(@table_info.created_at.type).to eq "DATETIME"
           expect(@table_info.created_at.notnull).to eq true

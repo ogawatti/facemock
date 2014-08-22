@@ -5,13 +5,14 @@ describe Facemock::FbGraph::Application::User do
 
   let(:permission1)   { :email }
   let(:permission2)   { :read_stream }
-  let(:options)       { { identifier:   100000000000001,
-                          name:         "test user",
-                          email:        "test@example.com",
-                          password:     "testpass",
-                          installed:    true,
-                          access_token: "test_token",
-                          permissions:  "#{permission1}, #{permission2}" }  }
+  let(:options)       { { identifier:     100000000000001,
+                          name:           "test user",
+                          email:          "test@example.com",
+                          password:       "testpass",
+                          installed:      true,
+                          access_token:   "test_token",
+                          permissions:    "#{permission1}, #{permission2}",
+                          application_id: 1 } }
 
   before { stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name) }
   after { Facemock::Database.new.drop }
@@ -120,7 +121,7 @@ describe Facemock::FbGraph::Application::User do
   end
 
   describe '#fetch' do
-    before { @user = Facemock::FbGraph::Application::User.new }
+    before { @user = Facemock::FbGraph::Application::User.new(options) }
 
     context 'when user does not save' do
       subject { @user.fetch }
@@ -145,7 +146,7 @@ describe Facemock::FbGraph::Application::User do
   describe '#destroy' do
     context 'when does not have permission' do
       before do
-        @user = Facemock::FbGraph::Application::User.new
+        @user = Facemock::FbGraph::Application::User.new(options)
         @user.save!
       end
 
@@ -161,7 +162,8 @@ describe Facemock::FbGraph::Application::User do
 
     context 'when have some permissions' do
       before do
-        @user = Facemock::FbGraph::Application::User.new({permissions:  "email, read_stream"})
+        opts = { application_id: 1, permissions: "email, read_stream" }
+        @user = Facemock::FbGraph::Application::User.new(opts)
         @user.save!
       end
 
@@ -172,8 +174,8 @@ describe Facemock::FbGraph::Application::User do
         @user.destroy
         expect(Facemock::FbGraph::Application::User.find_by_id(@user.id)).to be_nil
         expect(Facemock::FbGraph::Application::User::Permission.find_all_by_user_id(@user.id)).to be_empty
-        expect(@user.permissions).to be_empty
-        expect(@user.permission_objects).to be_empty
+        expect(@user.permissions).not_to be_empty
+        expect(@user.permission_objects).not_to be_empty
       end
     end
   end
@@ -181,7 +183,7 @@ describe Facemock::FbGraph::Application::User do
   describe '#revoke!' do
     context 'when does not have permission' do
       before do
-        @user = Facemock::FbGraph::Application::User.new
+        @user = Facemock::FbGraph::Application::User.new(options)
         @user.save!
       end
 
@@ -191,7 +193,8 @@ describe Facemock::FbGraph::Application::User do
 
     context 'when have some permissions' do
       before do
-        @user = Facemock::FbGraph::Application::User.new({permissions:  "email, read_stream"})
+        opts = { application_id: 1, permissions: "email, read_stream" }
+        @user = Facemock::FbGraph::Application::User.new(opts)
         @user.save!
       end
 

@@ -5,42 +5,49 @@ require 'hashie'
 module Facemock
   class Database
     class Table
+      # 以下は継承先でオーバーライド必須
+      #  * TABLE_NAME, COLUMN_NAMES
+      #  * initialize()
       TABLE_NAME = :tables
-      COLUMN_NAMES = [:id, :created_at]
+      COLUMN_NAMES = [:id, :text, :active, :number, :created_at]
 
       def initialize(options={})
         opts = Hashie::Mash.new(options)
         self.id = opts.id
+        self.text = opts.text
+        self.active = opts.active || false
+        self.number = opts.number
         self.created_at = opts.created_at
       end
 
-      # TODO : 戻り値はtrueのみ。他はraise
-      def save!
-        if self.id && !(self.class.find_by_id(self.id).nil?)
-          update!
-        else
-          insert!
-        end
+      def save!(options={})
+        persisted? ? update!(options) : insert!(options)
       end
 
-      # TODO : 戻り値はtrueのみ。他はraise
       def update_attributes!(options)
         # カラムに含まれるかどうかの確認。なければNoMethodError
         options.each_key {|key| self.send(key) }
-        update!(options)
+        if persisted?
+          update!(options)
+        else
+          insert!(options)
+        end
       end
 
       def destroy
+        raise unless persisted?
         execute "DELETE FROM #{table_name} WHERE ID = #{self.id};"
-        fetch
+        self
       end
 
       def fetch
-        sql = "SELECT * FROM #{table_name} WHERE ID = #{self.id} LIMIT 1;"
-        records = execute sql
-        return nil unless record = records.first
-        set_attributes_from_record(record)
-        self
+        if persisted?
+          sql = "SELECT * FROM #{table_name} WHERE ID = #{self.id} LIMIT 1;"
+          records = execute sql
+          return nil unless record = records.first
+          set_attributes_from_record(record)
+          self
+        end
       end
 
       def method_missing(name, *args)
@@ -114,6 +121,10 @@ module Facemock
         self.class.column_names
       end
 
+      def persisted?
+        !!(self.id && !(self.class.find_by_id(self.id).nil?))
+      end
+
       def self.table_name
         self::TABLE_NAME
       end
@@ -185,7 +196,7 @@ module Facemock
         column_names.each_with_index do |column_name, index|
           value = (record[index] == "") ? nil : record[index]
           parsed_value = case column_type(column_name)
-          when "BOOLEAN" then eval(value)
+          when "BOOLEAN"  then eval(value)
           when "DATETIME" then Time.parse(value)
           else  value
           end
@@ -244,17 +255,30 @@ module Facemock
         EOF
       end
 
-      def insert!
-        # idが指定されていない場合の対応
-        target_column_names = if self.id
+      # DatabaseへのINSERTが成功してからインスタンスのフィールド値を更新する
+      def insert!(options={})
+        opts = Hashie::Mash.new(options)
+        instance = self.class.new
+        column_names.each do |column_name|
+          if column_name != :created_at
+            if self.class.column_notnull(column_name) && column_is_empty?(column_name)
+              raise Facemock::Errors::ColumnTypeNotNull, "#{column_name} is null"
+            end
+            instance.send(column_name.to_s + "=", self.send(column_name))
+            if opts.send(column_name)
+              instance.send(column_name.to_s + "=", opts.send(column_name))
+            end
+          end
+        end
+
+        target_column_names = if instance.id
           column_names
         else
           column_names.select{|name| name != :id}
         end
-
-        self.created_at = Time.now
+        instance.created_at = Time.now
         target_column_values = target_column_names.inject([]) do |ary, column_name|
-          ary << "'#{self.send(column_name)}'"
+          ary << "'#{instance.send(column_name)}'"
         end
         values  = target_column_values.join(", ")
         columns = target_column_names.join(', ')
@@ -262,11 +286,10 @@ module Facemock
         sql = "INSERT INTO #{table_name}(#{columns}) VALUES ( #{values} );"
         records = execute sql
         set_attributes_from_record(records.first)
-        self
+        true
       end
 
       def update!(options={})
-        # save! から叩かれた場合はここを通る。created_atやその他のcolum値を設定する
         if options.empty?
           column_names.each do |column_name|
             if (value = self.send(column_name)) && column_name != :id
@@ -283,6 +306,7 @@ module Facemock
           execute sql
         end
         fetch
+        true
       end
 
       def set_attributes_from_record(record)
@@ -291,6 +315,22 @@ module Facemock
           method_name = column_name.to_s + "="
           self.send(method_name, hash.send(column_name))
         end
+      end
+
+      def column_is_empty?(column_name)
+        return true if self.send(column_name).nil?
+
+        return case self.class.column_type(column_name)
+        when "TEXT", "DATETIME", "BOOLEAN"
+          true if self.send(column_name) == ""
+        else
+          false
+        end
+      end
+
+      def self.column_notnull(column_name)
+        return nil unless column_names.include?(column_name.to_s.to_sym)
+        table_info.send(column_name).notnull
       end
     end
   end

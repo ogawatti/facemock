@@ -35,6 +35,9 @@ module TableHelper
     db.connection.execute <<-SQL
       CREATE TABLE TABLES (
         id          INTEGER   PRIMARY KEY AUTOINCREMENT,
+        text        TEXT      NOT NULL,
+        active      BOOLEAN,
+        number      INTEGER   NOT NULL,
         created_at  DATETIME  NOT NULL
       );
     SQL

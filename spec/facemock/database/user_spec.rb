@@ -166,45 +166,4 @@ describe Facemock::Database::User do
       end
     end
   end
-
-  # Facemock::Database::Table#update!中のcase文のelseを通過するテスト
-  describe '#save!' do
-    before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
-    end
-    after { @database.drop }
-
-    context 'when already saved' do
-      before do
-        @user = Facemock::Database::User.new.save!
-        @user.installed = true
-      end
-
-      subject { @user.save! }
-      it { is_expected.to be_kind_of Facemock::Database::User }
-
-      describe '.installed' do
-        subject { @user.save!.installed }
-        it { is_expected.to eq true }
-      end
-    end
-  end
-
-  # Facemock::Database::Table#update_attributes!のテスト
-  #  * 複数カラムを更新する
-  #  * 型がIntegerのカラムを更新する
-  describe '#update_attributes!' do
-    context 'with option that have multi attributes' do
-      before do
-        stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-        @database = Facemock::Database.new
-        @permission = Facemock::Database::User.new.save!
-      end
-      after { @database.drop }
-
-      subject { lambda { @permission.update_attributes!(options) } }
-      it { is_expected.not_to raise_error }
-    end
-  end
 end
