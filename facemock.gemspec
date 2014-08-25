@@ -18,7 +18,6 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "activerecord", "~> 4.1.4"
   spec.add_dependency "sqlite3"
   spec.add_dependency "fb_graph"
   spec.add_dependency "hashie"

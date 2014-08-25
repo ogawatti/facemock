@@ -14,12 +14,6 @@ module Facemock
         Object.send(:remove_const, :FbGraph) if Object.constants.include?(:FbGraph)
         Object.const_set(:FbGraph, Facemock::FbGraph)
       end
-
-      if options[:database_name]
-        Facemock::Config.database(options[:database_name])
-      else
-        Facemock::Config.database
-      end
       true
     end
 
@@ -29,7 +23,6 @@ module Facemock
         Object.const_set(:FbGraph, ::SourceFbGraph)
         Object.send(:remove_const, :SourceFbGraph) if Object.constants.include?(:FbGraph)
       end
-      Facemock::Config.reset_database
       true
     end
   end
