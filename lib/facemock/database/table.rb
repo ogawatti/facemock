@@ -95,22 +95,15 @@ module Facemock
       end
 
       def self.method_missing(name, *args)
-        case name
-        when /^find_by_(.+)/
+        if name =~ /^find_by_(.+)/ || name =~ /^find_all_by_(.+)/
           column_name = $1
-          super unless column_names.include?(column_name.to_sym)
-          raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
-          define_find_by_column(column_name)
-          send(name, args.first)
-        when /^find_all_by_(.+)/
-          column_name = $1
-          super unless column_names.include?(column_name.to_sym)
-          raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
-          define_find_all_by_column(column_name)
-          send(name, args.first)
         else
           super
         end
+        super unless column_names.include?(column_name.to_sym)
+        raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
+        super unless define_find_method(name, column_name)
+        send(name, args.first)
       end
 
       def table_name
@@ -205,6 +198,14 @@ module Facemock
         hash
       end
 
+      def self.define_find_method(method_name, column_name)
+        case method_name
+        when /^find_by_(.+)/     then define_find_by_column(column_name)
+        when /^find_all_by_(.+)/ then define_find_all_by_column(column_name)
+        else false
+        end
+      end
+
       def self.define_find_by_column(column_name)
         self.class_eval <<-EOF
           def self.find_by_#{column_name}(value)
@@ -220,6 +221,7 @@ module Facemock
             record_to_object(records.first)
           end
         EOF
+        true
       end
 
       def self.define_find_all_by_column(column_name)
@@ -237,6 +239,7 @@ module Facemock
             records_to_objects(records)
           end
         EOF
+        true
       end
 
       def define_column_getter(name)
