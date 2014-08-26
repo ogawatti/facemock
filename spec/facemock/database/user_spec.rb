@@ -80,7 +80,7 @@ describe Facemock::Database::User do
 
         describe '.size' do
           subject { Facemock::Database::User.new.password.size }
-          it { is_expected.to eq 10 }
+          it { is_expected.to be <= 10 }
         end
       end
 
