@@ -1,7 +1,6 @@
 require 'fb_graph'
 require 'facemock/config'
 require 'facemock/fb_graph/user'
-require 'facemock/fb_graph/errors'
 require 'facemock/fb_graph/application'
 
 module Facemock
@@ -25,5 +24,7 @@ module Facemock
       end
       true
     end
+
+    class InvalidToken < ::FbGraph::InvalidToken; end
   end
 end

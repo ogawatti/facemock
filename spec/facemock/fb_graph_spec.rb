@@ -5,12 +5,12 @@ describe Facemock::FbGraph do
     expect(Facemock::FbGraph::Application).to be_truthy
   end
 
-  it 'should have a errors module' do
-    expect(Facemock::FbGraph::Errors).to be_truthy
-  end
-
   it 'should have a user module' do
     expect(Facemock::FbGraph::User).to be_truthy
+  end
+
+  it 'should have a invalid_token class' do
+    expect(Facemock::FbGraph::InvalidToken).to be_truthy
   end
 
   describe '#on' do
