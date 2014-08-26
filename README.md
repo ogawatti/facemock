@@ -140,9 +140,9 @@ yaml file see belo.
 
     Facemock.on
     begin
-      raise FbGraph::Errors::InvalidToken.new "test exception"
+      raise FbGraph::InvalidToken.new "test exception"
     rescue => e
-      puts "#{e.class} : #{e.message}"  #=> Facemock::FbGraph::Errors::InvalidToken : test exception
+      puts "#{e.class} : #{e.message}"  #=> Facemock::FbGraph::InvalidToken : test exception
     end
 
 ## Contributing
