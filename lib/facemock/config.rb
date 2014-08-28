@@ -38,7 +38,7 @@ module Facemock
         raise Facemock::Errors::IncorrectDataFormat.new "users format is incorrect" unless validate_users(users)
 
         # Create application and user record
-        self.database if @db
+        Facemock::Database::Application.new({ id: app_id, secret: app_secret }).save!
         app = Facemock::FbGraph::Application.new(app_id, secret: app_secret)
         users.each do |options|
           app.test_user!(options)

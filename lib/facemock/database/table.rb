@@ -209,6 +209,8 @@ module Facemock
       def self.define_find_by_column(column_name)
         self.class_eval <<-EOF
           def self.find_by_#{column_name}(value)
+            return nil if value.nil?
+
             column_value = case value
             when String then "'" + value + "'"
             when Time   then "'" + value.to_s + "'"
@@ -227,6 +229,8 @@ module Facemock
       def self.define_find_all_by_column(column_name)
         self.class_eval <<-EOF
           def self.find_all_by_#{column_name}(value)
+            return [] if value.nil?
+
             column_value = case value
             when String then "'" + value + "'"
             when Time   then "'" + value.to_s + "'"

@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Facemock::FbGraph::Application::TestUsers do
+  include ApplicationCreateHelper
+
   let(:db_name)         { ".test" }
 
   let(:facebook_app_id) { "100000000000000" }
@@ -133,6 +135,7 @@ describe Facemock::FbGraph::Application::TestUsers do
 
   describe '#next' do
     before do
+      create_application({ id: facebook_app_id, secret: "test_secret" })
       @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: "test_secret")
       3.times { @app.test_user! }
     end

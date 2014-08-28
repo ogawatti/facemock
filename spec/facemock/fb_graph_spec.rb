@@ -9,8 +9,9 @@ describe Facemock::FbGraph do
     expect(Facemock::FbGraph::User).to be_truthy
   end
 
-  it 'should have a invalid_token class' do
+  it 'should have a error class' do
     expect(Facemock::FbGraph::InvalidToken).to be_truthy
+    expect(Facemock::FbGraph::InvalidRequest).to be_truthy
   end
 
   describe '#on' do

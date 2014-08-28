@@ -26,5 +26,6 @@ module Facemock
     end
 
     class InvalidToken < ::FbGraph::InvalidToken; end
+    class InvalidRequest < ::FbGraph::InvalidRequest; end
   end
 end
