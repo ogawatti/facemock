@@ -35,7 +35,7 @@ describe Facemock::Database::Application do
 
         describe '.size' do
           subject { Facemock::Database::Application.new.secret.size }
-          it { is_expected.to eq 128 }
+          it { is_expected.to be <= 32 }
         end
       end
 
