@@ -16,15 +16,6 @@ module Facemock
         @identifier   = identifier
         @secret       = opts.secret
         @access_token = opts.access_token
-
-        if (identifier != :app)
-          # TODO : newでDB登録しないようにする
-          #  * 事前登録はFacemock::Config.load_usersでさせる
-          unless @record = Facemock::Database::Application.find_by_id(identifier)
-            @record = Facemock::Database::Application.new({id: identifier, secret: opts.secret})
-            @record.save!
-          end
-        end
       end
 
       def fetch

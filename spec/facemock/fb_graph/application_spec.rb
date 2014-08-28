@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Facemock::FbGraph::Application do
+  include ApplicationCreateHelper
+
   let(:db_name)      { ".test" }
 
   let(:facebook_app_id) { 100000000000000 }
@@ -37,7 +39,7 @@ describe Facemock::FbGraph::Application do
           expect(@app.identifier).to eq @id
           expect(@app.secret).to be_nil
           expect(@app.access_token).to be_nil
-          expect(Facemock::Database::Application.all.size).to eq @default_record_size + 1
+          expect(Facemock::Database::Application.all.size).to eq @default_record_size
         end
       end
 
@@ -79,7 +81,7 @@ describe Facemock::FbGraph::Application do
           expect(@app.identifier).to eq facebook_app_id
           expect(@app.secret).to eq @options[:secret]
           expect(@app.access_token).to eq @options[:access_token]
-          expect(Facemock::Database::Application.all.size).to eq @default_record_size + 1
+          expect(Facemock::Database::Application.all.size).to eq @default_record_size
         end
       end
     end
@@ -127,7 +129,10 @@ describe Facemock::FbGraph::Application do
       end
 
       context 'and correct secret is specified' do
-        before { @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret) }
+        before do
+          create_application({ id: facebook_app_id, secret: facebook_app_secret })
+          @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
+        end
 
         subject { @app.fetch }
         it { is_expected.to be_kind_of Facemock::FbGraph::Application }
@@ -167,6 +172,7 @@ describe Facemock::FbGraph::Application do
 
       context 'and access token is correct' do
         before do
+          create_application({ id: facebook_app_id, secret: facebook_app_secret})
           app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
           user = app.test_user!
           @access_token = user.access_token
@@ -209,7 +215,10 @@ describe Facemock::FbGraph::Application do
     end
 
     context 'when identifier and secret is correct' do
-      before { @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret) }
+      before do
+        create_application({ id: facebook_app_id, secret: facebook_app_secret })
+        @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
+      end
 
       it 'should created user' do
         expect(Facemock::FbGraph::Application::User.all).to be_empty
@@ -255,7 +264,10 @@ describe Facemock::FbGraph::Application do
     end
 
     context 'when identifier and secret is correct' do
-      before { @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret) }
+      before do
+        create_application({ id: facebook_app_id, secret: facebook_app_secret })
+        @app = Facemock::FbGraph::Application.new(facebook_app_id, secret: facebook_app_secret)
+      end
 
       context 'when test_user is not created' do
         subject { @app.test_users }
