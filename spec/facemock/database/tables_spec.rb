@@ -451,6 +451,11 @@ describe Facemock::Database::Table do
       end
 
       describe '.find_by_id' do
+        context 'with nil' do
+          subject { Facemock::Database::Table.find_by_id(nil) }
+          it { is_expected.to be_nil }
+        end
+
         context 'with not id' do
           subject { Facemock::Database::Table.find_by_id("hoge") }
           it { is_expected.to be_nil }
@@ -512,6 +517,11 @@ describe Facemock::Database::Table do
       end
 
       describe '.find_all_by_id' do
+        context 'with nil' do
+          subject { Facemock::Database::Table.find_all_by_id(nil) }
+          it { is_expected.to be_empty }
+        end
+
         context 'with not id' do
           subject { Facemock::Database::Table.find_all_by_id("hoge") }
           it { is_expected.to be_empty }
