@@ -3,16 +3,18 @@ require 'spec_helper'
 describe Facemock::Database::User do
   include TableHelper
 
-  let(:db_name)         { ".test" }
-  let(:table_name)      { :users }
-  let(:column_names)    { [ :id,
-                            :name,
-                            :email,
-                            :password,
-                            :installed,
-                            :access_token,
-                            :application_id,
-                            :created_at] }
+  let(:db_name)        { ".test" }
+  let(:table_name)     { :users }
+  let(:column_names)   { [ :id,
+                           :name,
+                           :email,
+                           :password,
+                           :installed,
+                           :access_token,
+                           :application_id,
+                           :created_at ] }
+  let(:children)       { [ Facemock::Database::Permission, 
+                           Facemock::Database::AuthorizationCode ] }
 
   let(:id)             { 1 }
   let(:name)           { "test user" }
@@ -21,7 +23,7 @@ describe Facemock::Database::User do
   let(:installed)      { true }
   let(:access_token)   { "test_token" }
   let(:application_id) { 1 }
-  let(:created_at) { Time.now }
+  let(:created_at)     { Time.now }
   let(:options)        { { id:             id, 
                            name:           name,
                            email:          email,
@@ -31,10 +33,7 @@ describe Facemock::Database::User do
                            application_id: application_id,
                            created_at:     created_at } }
 
-  after do
-    remove_dynamically_defined_class_method(Facemock::Database::User)
-    remove_dynamically_defined_instance_method(Facemock::Database::User)
-  end
+  after { remove_dynamically_defined_all_method }
 
   describe '::TABLE_NAME' do
     subject { Facemock::Database::User::TABLE_NAME }
@@ -44,6 +43,11 @@ describe Facemock::Database::User do
   describe '::COLUMN_NAMES' do
     subject { Facemock::Database::User::COLUMN_NAMES }
     it { is_expected.to eq column_names }
+  end
+
+  describe '::CHILDREN' do
+    subject { Facemock::Database::User::CHILDREN }
+    it { is_expected.to eq children }
   end
 
   describe '#initialize' do
@@ -63,7 +67,7 @@ describe Facemock::Database::User do
 
         describe '.size' do
           subject { Facemock::Database::User.new.name.size }
-          it { is_expected.to eq 10 }
+          it { is_expected.to be <= 10 }
         end
       end
 
@@ -163,6 +167,33 @@ describe Facemock::Database::User do
             expect(value).to eq options[column_name]
           end
         end
+      end
+    end
+  end
+
+  describe 'destroy' do
+    before do
+      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+      @database = Facemock::Database.new
+    end
+    after { @database.drop }
+
+    context 'when has permission and authorizaion_code' do
+      before do
+        application = Facemock::Database::Application.create!
+        @user = Facemock::Database::User.create!(application_id: application.id)
+        permission = Facemock::Database::Permission.new(name: "email", user_id: @user.id)
+        permission.save!
+        authorization_code = Facemock::Database::AuthorizationCode.new(user_id: @user.id)
+        authorization_code.save!
+      end
+
+      it 'should delete permissions' do
+        @user.destroy
+        permissions = Facemock::Database::Permission.find_all_by_user_id(@user.id)
+        expect(permissions).to be_empty
+        authorization_codes = Facemock::Database::AuthorizationCode.find_all_by_user_id(@user.id)
+        expect(authorization_codes).to be_empty
       end
     end
   end

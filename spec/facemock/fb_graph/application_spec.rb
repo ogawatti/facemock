@@ -15,16 +15,6 @@ describe Facemock::FbGraph::Application do
   end
   after  { @database.drop }
 
-  it 'should have a user class' do
-    expect(Facemock::FbGraph::Application::User).to be_truthy
-    expect(Facemock::FbGraph::Application::User.ancestors).to include Facemock::Database::User
-  end
-
-  it 'should have a users class' do
-    expect(Facemock::FbGraph::Application::TestUsers).to be_truthy
-    expect(Facemock::FbGraph::Application::TestUsers.ancestors).to include Array
-  end
-
   describe '#new' do
     before { @default_record_size = Facemock::Database::Application.all.size }
 

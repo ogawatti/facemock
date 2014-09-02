@@ -1,4 +1,16 @@
 module TableHelper
+  def remove_dynamically_defined_all_method
+    klasses = [Facemock::Database::Table,
+               Facemock::Database::Application,
+               Facemock::Database::User,
+               Facemock::Database::Permission,
+               Facemock::Database::AuthorizationCode ]
+    klasses.each do |klass|
+      remove_dynamically_defined_class_method(klass)
+      remove_dynamically_defined_instance_method(klass)
+    end
+  end
+
   # テストで動的に定義したクラスメソッドを削除
   def remove_dynamically_defined_class_method(klass)
     klass.methods.each do |method_name|

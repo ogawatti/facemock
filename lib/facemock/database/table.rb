@@ -10,6 +10,7 @@ module Facemock
       #  * initialize()
       TABLE_NAME = :tables
       COLUMN_NAMES = [:id, :text, :active, :number, :created_at]
+      CHILDREN = []
 
       def initialize(options={})
         opts = Hashie::Mash.new(options)
@@ -27,15 +28,18 @@ module Facemock
       def update_attributes!(options)
         # カラムに含まれるかどうかの確認。なければNoMethodError
         options.each_key {|key| self.send(key) }
-        if persisted?
-          update!(options)
-        else
-          insert!(options)
-        end
+        persisted? ? update!(options) : insert!(options)
       end
 
       def destroy
         raise unless persisted?
+        self.class.children.each do |klass|
+          klass_last_name = self.class.name.split("::").last.downcase
+          find_method_name = "find_all_by_#{klass_last_name}_id"
+          objects = klass.send(find_method_name, self.id)
+          objects.each{|object| object.destroy }
+        end
+
         execute "DELETE FROM #{table_name} WHERE ID = #{self.id};"
         self
       end
@@ -70,6 +74,12 @@ module Facemock
         end
       end
 
+      def self.create!(options={})
+        instance = self.new(options)
+        instance.save!
+        instance
+      end
+
       def self.all
         records = execute "SELECT * FROM #{table_name};"
         records_to_objects(records)
@@ -95,15 +105,13 @@ module Facemock
       end
 
       def self.method_missing(name, *args)
-        if name =~ /^find_by_(.+)/ || name =~ /^find_all_by_(.+)/
-          column_name = $1
+        if ((name =~ /^find_by_(.+)/ || name =~ /^find_all_by_(.+)/) && 
+          (column_name = $1) && column_names.include?(column_name.to_sym))
+          raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
+          define_find_method(name, column_name) ? send(name, args.first) : super
         else
           super
         end
-        super unless column_names.include?(column_name.to_sym)
-        raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" unless args.size == 1
-        super unless define_find_method(name, column_name)
-        send(name, args.first)
       end
 
       def table_name
@@ -124,6 +132,10 @@ module Facemock
 
       def self.column_names
         self::COLUMN_NAMES
+      end
+
+      def self.children
+        self::CHILDREN
       end
 
       def self.column_type(column_name)

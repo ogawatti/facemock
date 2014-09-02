@@ -1,19 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::FbGraph do
-  it 'should have a application class' do
-    expect(Facemock::FbGraph::Application).to be_truthy
-  end
-
-  it 'should have a user module' do
-    expect(Facemock::FbGraph::User).to be_truthy
-  end
-
-  it 'should have a error class' do
-    expect(Facemock::FbGraph::InvalidToken).to be_truthy
-    expect(Facemock::FbGraph::InvalidRequest).to be_truthy
-  end
-
   describe '#on' do
     subject { Facemock::FbGraph.on }
     it { is_expected.to be_truthy }

@@ -38,10 +38,8 @@ module Facemock
         end
 
         def destroy
-          @permission_objects.each do |permission|
-            permission.destroy
-          end
           super
+          @permission_objects = []
         end
 
         def revoke!

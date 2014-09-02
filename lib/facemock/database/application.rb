@@ -1,13 +1,12 @@
-require 'facemock/database'
 require 'facemock/database/table'
-require 'sqlite3'
-require 'hashie'
+require 'facemock/database/user'
 
 module Facemock
   class Database
     class Application < Table
       TABLE_NAME = :applications
       COLUMN_NAMES = [:id, :secret, :created_at]
+      CHILDREN = [ User ]
 
       # WANT : DBに登録済みの値と重複しないようにする(id, secret)
       def initialize(options={})

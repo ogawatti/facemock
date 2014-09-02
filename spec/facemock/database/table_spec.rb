@@ -3,9 +3,10 @@ require 'spec_helper'
 describe Facemock::Database::Table do
   include TableHelper
 
-  let(:db_name)         { ".test" }
-  let(:table_name)      { :tables }
-  let(:column_names)    { [:id, :text, :active, :number, :created_at] }
+  let(:db_name)      { ".test" }
+  let(:table_name)   { :tables }
+  let(:column_names) { [ :id, :text, :active, :number, :created_at ] }
+  let(:children)     { [] }
 
   before do
     stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
@@ -14,8 +15,7 @@ describe Facemock::Database::Table do
 
   after do
     Facemock::Database.new.drop
-    remove_dynamically_defined_class_method(Facemock::Database::Table)
-    remove_dynamically_defined_instance_method(Facemock::Database::Table)
+    remove_dynamically_defined_all_method
   end
 
   describe '::TABLE_NAME' do
@@ -26,6 +26,11 @@ describe Facemock::Database::Table do
   describe '::COLUMN_NAMES' do
     subject { Facemock::Database::Table::COLUMN_NAMES }
     it { is_expected.to eq column_names }
+  end
+
+  describe '::CHILDREN' do
+    subject { Facemock::Database::Table::CHILDREN }
+    it { is_expected.to eq children }
   end
 
   describe '#initialize' do
@@ -179,6 +184,32 @@ describe Facemock::Database::Table do
               expect(@table.created_at).not_to eq @options_created_at
               expect(@table.created_at).not_to eq @setting_created_at
             end
+          end
+        end
+      end
+    end
+  end
+
+  describe '#create!' do
+    context 'without option' do
+      subject { lambda { Facemock::Database::Table.create! } }
+      it { is_expected.to raise_error Facemock::Errors::ColumnTypeNotNull }
+    end
+
+    context 'with options that cloumns are not null' do
+      before do
+        @options = { id: 1, text: "test", active: true, number: 0, created_at: Time.now }
+      end
+
+      it 'should new and save and return saved object' do
+        table = Facemock::Database::Table.create!(@options)
+        expect(table).to be_kind_of(Facemock::Database::Table)
+        column_names.each do |column_name|
+          value = table.send(column_name)
+          if column_name == :created_at
+            expect(value).to be_kind_of Time
+          else
+            expect(value).to eq @options[column_name]
           end
         end
       end
