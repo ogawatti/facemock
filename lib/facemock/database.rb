@@ -3,13 +3,14 @@ require 'facemock/database/table'
 require 'facemock/database/application'
 require 'facemock/database/user'
 require 'facemock/database/permission'
+require 'facemock/database/authorization_code'
 
 module Facemock
   class Database
     ADAPTER = "sqlite3"
     DB_DIRECTORY = File.expand_path("../../../db", __FILE__)
     DEFAULT_DB_NAME = "facemock"
-    TABLE_NAMES = [:applications, :users, :permissions]
+    TABLE_NAMES = [:applications, :users, :permissions, :authorization_codes]
 
     attr_reader :name
     attr_reader :connection
@@ -112,6 +113,17 @@ module Facemock
         CREATE TABLE permissions (
           id          INTEGER   PRIMARY KEY AUTOINCREMENT,
           name        TEXT      NOT NULL,
+          user_id     INTEGER   NOT NULL,
+          created_at  DATETIME  NOT NULL
+        );
+      SQL
+    end
+
+    def create_authorization_codes_table
+      @connection.execute <<-SQL
+        CREATE TABLE authorization_codes (
+          id          INTEGER   PRIMARY KEY AUTOINCREMENT,
+          string      TEXT      NOT NULL,
           user_id     INTEGER   NOT NULL,
           created_at  DATETIME  NOT NULL
         );

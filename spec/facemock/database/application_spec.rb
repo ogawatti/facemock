@@ -1,13 +1,20 @@
 require 'spec_helper'
 
 describe Facemock::Database::Application do
-  let(:table_name)      { :applications }
-  let(:column_names)    { [:id, :secret, :created_at] }
+  include TableHelper
 
-  let(:id)      { 1 }
-  let(:secret)  { "test_secret" }
-  let(:created_at) { Time.now }
-  let(:options) { { id: id, secret: secret, created_at: created_at } }
+  let(:db_name)      { ".test" }
+
+  let(:table_name)   { :applications }
+  let(:column_names) { [ :id, :secret, :created_at ] }
+  let(:children)     { [ Facemock::Database::User ] }
+
+  let(:id)           { 1 }
+  let(:secret)       { "test_secret" }
+  let(:created_at)   { Time.now }
+  let(:options)      { { id: id, secret: secret, created_at: created_at } }
+
+  after { remove_dynamically_defined_all_method }
 
   describe '::TABLE_NAME' do
     subject { Facemock::Database::Application::TABLE_NAME }
@@ -17,6 +24,11 @@ describe Facemock::Database::Application do
   describe '::COLUMN_NAMES' do
     subject { Facemock::Database::Application::COLUMN_NAMES }
     it { is_expected.to eq column_names }
+  end
+
+  describe '::CHILDREN' do
+    subject { Facemock::Database::Application::CHILDREN }
+    it { is_expected.to eq children }
   end
 
   describe '#initialize' do
@@ -67,6 +79,27 @@ describe Facemock::Database::Application do
             expect(value).to eq options[column_name]
           end
         end
+      end
+    end
+  end
+
+  describe 'destroy' do
+    before do
+      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+      @database = Facemock::Database.new
+    end
+    after { @database.drop }
+
+    context 'when has user' do
+      before do
+        @application = Facemock::Database::Application.create!
+        Facemock::Database::User.create!(application_id: @application.id)
+      end
+
+      it 'should delete permissions' do
+        @application.destroy
+        users = Facemock::Database::User.find_all_by_application_id(@application.id)
+        expect(users).to be_empty
       end
     end
   end

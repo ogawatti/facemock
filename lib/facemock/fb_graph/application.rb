@@ -44,9 +44,7 @@ module Facemock
       def test_user!(options={})
         validate_and_raise_error
         options.merge!({application_id: self.identifier})
-        user = User.new(options)
-        user.save!
-        user
+        user = User.create!(options)
       end
 
       def test_users(options={})

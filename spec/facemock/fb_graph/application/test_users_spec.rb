@@ -43,8 +43,7 @@ describe Facemock::FbGraph::Application::TestUsers do
 
       context 'when user exist only one' do
         before do
-          @user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-          @user.save!
+          @user = Facemock::FbGraph::Application::User.create!(application_id: facebook_app_id)
         end
 
         it 'should have user' do
@@ -64,7 +63,7 @@ describe Facemock::FbGraph::Application::TestUsers do
         context 'when user is exist only two' do
           before do
             2.times do
-              Facemock::FbGraph::Application::User.new(application_id: facebook_app_id).save!
+              Facemock::FbGraph::Application::User.create!(application_id: facebook_app_id)
             end
             @limit = 1
           end
@@ -82,7 +81,7 @@ describe Facemock::FbGraph::Application::TestUsers do
         context 'when user is exist only two' do
           before do
             2.times do
-              Facemock::FbGraph::Application::User.new(application_id: facebook_app_id).save!
+              Facemock::FbGraph::Application::User.create!(application_id: facebook_app_id)
             end
             @after = 1
           end
@@ -100,7 +99,7 @@ describe Facemock::FbGraph::Application::TestUsers do
         context 'when user is exist only three' do
           before do
             3.times do
-              Facemock::FbGraph::Application::User.new(application_id: facebook_app_id).save!
+              Facemock::FbGraph::Application::User.create!(application_id: facebook_app_id)
             end
             @options = { limit: 1, after: 1 }
           end
@@ -118,8 +117,7 @@ describe Facemock::FbGraph::Application::TestUsers do
 
   describe '#collection' do
     before do
-      user = Facemock::FbGraph::Application::User.new(application_id: facebook_app_id)
-      user.save!
+      user = Facemock::FbGraph::Application::User.create!(application_id: facebook_app_id)
       @test_users =  Facemock::FbGraph::Application::TestUsers.new(facebook_app_id)
     end
 

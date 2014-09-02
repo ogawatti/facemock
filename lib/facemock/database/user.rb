@@ -1,13 +1,13 @@
-require 'facemock/database'
 require 'facemock/database/table'
-require 'sqlite3'
-require 'hashie'
+require 'facemock/database/permission'
+require 'facemock/database/authorization_code'
 
 module Facemock
   class Database
     class User < Table
       TABLE_NAME = :users
       COLUMN_NAMES = [:id, :name, :email, :password, :installed, :access_token, :application_id, :created_at]
+      CHILDREN = [ Permission, AuthorizationCode ]
 
       def initialize(options={})
         opts = Hashie::Mash.new(options)

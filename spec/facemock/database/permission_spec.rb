@@ -1,14 +1,19 @@
 require 'spec_helper'
 
 describe Facemock::Database::Permission do
-  let(:table_name)      { :permissions }
-  let(:column_names)    { [ :id, :name, :user_id, :created_at ] }
+  include TableHelper
 
-  let(:id) { 1 }
-  let(:name) { "read_stream" }
-  let(:user_id) { 1 }
-  let(:created_at) { Time.now }
-  let(:options) { { id: id, name: name, user_id: user_id, created_at: created_at } }
+  let(:table_name)   { :permissions }
+  let(:column_names) { [ :id, :name, :user_id, :created_at ] }
+  let(:children)     { [] }
+
+  let(:id)           { 1 }
+  let(:name)         { "read_stream" }
+  let(:user_id)      { 1 }
+  let(:created_at)   { Time.now }
+  let(:options)      { { id: id, name: name, user_id: user_id, created_at: created_at } }
+
+  after { remove_dynamically_defined_all_method }
 
   describe '::TABLE_NAME' do
     subject { Facemock::Database::Permission::TABLE_NAME }
@@ -18,6 +23,11 @@ describe Facemock::Database::Permission do
   describe '::COLUMN_NAMES' do
     subject { Facemock::Database::Permission::COLUMN_NAMES }
     it { is_expected.to eq column_names }
+  end
+
+  describe '::CHILDREN' do
+    subject { Facemock::Database::Permission::CHILDREN }
+    it { is_expected.to eq children }
   end
 
   describe '#initialize' do

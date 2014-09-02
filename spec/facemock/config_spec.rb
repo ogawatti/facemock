@@ -5,10 +5,6 @@ describe Facemock::Config do
   let(:db_name) { ".test" }
   let(:ymlfile) { "testdata.yml" }
 
-  it 'should have a database module' do
-    expect(Facemock::Database).to be_truthy
-  end
-
   before { stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name) }
 
   describe '#default_database' do

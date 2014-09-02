@@ -4,7 +4,7 @@ describe Facemock::Database do
   let(:db_name)         { ".test" }
   let(:default_db_name) { "facemock" }
   let(:adapter)         { "sqlite3" }
-  let(:table_names)     { [:applications, :users, :permissions] }
+  let(:table_names)     { [:applications, :users, :permissions, :authorization_codes] }
   let(:db_directory)    { File.expand_path("../../../db", __FILE__) }
   let(:db_filepath)     { File.join(db_directory, "#{db_name}.#{adapter}") }
 
@@ -26,22 +26,6 @@ describe Facemock::Database do
   describe '::DEFAULT_DB_NAMES' do
     subject { Facemock::Database::DEFAULT_DB_NAME }
     it { is_expected.to eq default_db_name }
-  end
-
-  it 'should have a table class' do
-    expect(Facemock::Database::Table).to be_truthy
-  end
-
-  it 'should have a application class' do
-    expect(Facemock::Database::Application).to be_truthy
-  end
-
-  it 'should have a user class' do
-    expect(Facemock::Database::User).to be_truthy
-  end
-
-  it 'should have a permission class' do
-    expect(Facemock::Database::Permission).to be_truthy
   end
 
   describe '#initialize' do
@@ -265,6 +249,13 @@ describe Facemock::Database do
     end
 
     context 'when drop tables' do
+      before { @database.drop_tables }
+
+      it 'should not exist any tables' do
+        table_names.each do |table_name|
+          expect(@database.table_exists?(table_name)).to eq false
+        end
+      end
     end
   end
 end
