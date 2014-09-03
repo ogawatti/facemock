@@ -112,7 +112,7 @@ for specified gem
     Facemock::FbGraph.on
     Facemock::Config.load_users("./test_users.yml")
 
-yaml file see belo.
+yaml file see below.
 
     ---
     - :app_id: '000000000000001'
@@ -133,6 +133,22 @@ yaml file see belo.
         :name: test user three
         :email: test_user_three@example.com
         :password: testpass
+
+### AuthHash
+
+    require 'facemock'
+
+    app  = Facemock::Database::Application.create!
+    user = Facemock::Database::User.craete!(application_id: app.id)
+    auth_hash = Facemock.auth_hash(user.access_token)
+
+    # auth_hash == { "provider"    => "facebook", 
+    #                "uid"         => 100007315962084,
+    #                "info"        => { "name"       => "c6fyxii0u2" },
+    #                "credentials" => { "token"      => "d4a88140f1...",
+    #                                   "expires_at" => 2014-11-02 09:09:51 +0900 },
+    #                "extra"       => { "raw_info"   => { "id"   => 100007315962084, 
+    #                                                   "name" => "c6fyxii0u2" } } }
 
 ### Exception
 
