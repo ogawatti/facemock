@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Facemock do
-  let(:version) { '0.0.6' }
+  let(:version) { '0.0.7' }
   let(:db_name) { '.test' }
 
   describe 'VERSION' do
