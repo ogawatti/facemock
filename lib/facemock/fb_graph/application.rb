@@ -2,7 +2,7 @@ require 'hashie'
 require 'facemock/config'
 require 'facemock/fb_graph/application/user'
 require 'facemock/fb_graph/application/test_users'
-require 'facemock/database/application'
+require 'facemock/application'
 
 module Facemock
   module FbGraph
@@ -30,7 +30,7 @@ module Facemock
           elsif !validate_identifier_and_secret
             raise Facemock::FbGraph::InvalidRequest.new "Unsupported get request."
           end
-          Facemock::Database::Application.find_by_id(@identifier)
+          Facemock::Application.find_by_id(@identifier)
         end
 
         if @record
@@ -65,8 +65,8 @@ module Facemock
       def validate_identifier_and_secret
         if validate_identifier && validate_secret
           # WANT : find_by_**_and_**(**, **)の実装
-          app_by_id     = Facemock::Database::Application.find_by_id(@identifier)
-          app_by_secret = Facemock::Database::Application.find_by_secret(@secret)
+          app_by_id     = Facemock::Application.find_by_id(@identifier)
+          app_by_secret = Facemock::Application.find_by_secret(@secret)
           !!(app_by_id && app_by_secret && app_by_id.identifier == app_by_secret.identifier)
         else
           false
@@ -76,23 +76,23 @@ module Facemock
       def validate_identifier
         return false if @identifier.nil? || @identifier == ""
         return false unless [Fixnum, String].include?(@identifier.class)
-        return false unless Facemock::Database::Application.find_by_id(@identifier)
+        return false unless Facemock::Application.find_by_id(@identifier)
         true
       end
 
       def validate_secret
         return false if @secret.nil? || @secret == ""
-        return false unless Facemock::Database::Application.find_by_secret(@secret)
+        return false unless Facemock::Application.find_by_secret(@secret)
         true
       end
 
       def validate_access_token
-        !!(Facemock::Database::User.find_by_access_token(@access_token))
+        !!(Facemock::User.find_by_access_token(@access_token))
       end
 
       def find_by_access_token
-        if user = Facemock::Database::User.find_by_access_token(@access_token)
-          Facemock::Database::Application.find_by_id(user.application_id)
+        if user = Facemock::User.find_by_access_token(@access_token)
+          Facemock::Application.find_by_id(user.application_id)
         else
           nil
         end

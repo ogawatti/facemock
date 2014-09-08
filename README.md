@@ -138,8 +138,8 @@ yaml file see below.
 
     require 'facemock'
 
-    app  = Facemock::Database::Application.create!
-    user = Facemock::Database::User.craete!(application_id: app.id)
+    app  = Facemock::Application.create!
+    user = Facemock::User.craete!(application_id: app.id)
     auth_hash = Facemock.auth_hash(user.access_token)
 
     # auth_hash == { "provider"    => "facebook", 

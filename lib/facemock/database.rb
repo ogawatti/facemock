@@ -1,9 +1,5 @@
 require 'sqlite3'
 require 'facemock/database/table'
-require 'facemock/database/application'
-require 'facemock/database/user'
-require 'facemock/database/permission'
-require 'facemock/database/authorization_code'
 
 module Facemock
   class Database

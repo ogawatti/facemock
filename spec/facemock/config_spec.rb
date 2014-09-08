@@ -118,8 +118,8 @@ describe Facemock::Config do
           begin
             Facemock::Config.load_users(@path)
           rescue => error
-            expect(Facemock::Database::Application.all).to be_empty
-            expect(Facemock::Database::User.all).to be_empty
+            expect(Facemock::Application.all).to be_empty
+            expect(Facemock::User.all).to be_empty
           end
         end
       end
@@ -172,8 +172,8 @@ describe Facemock::Config do
           app_count  = yaml_load_data.size
           user_count = yaml_load_data.inject(0){|count, data| count += data[:users].size }
           Facemock::Config.load_users(@path)
-          expect(Facemock::Database::Application.all.count).to eq app_count
-          expect(Facemock::Database::User.all.count).to eq user_count
+          expect(Facemock::Application.all.count).to eq app_count
+          expect(Facemock::User.all.count).to eq user_count
         end
       end
     end

@@ -1,9 +1,13 @@
-require "facemock/version"
-require "facemock/config"
-require "facemock/fb_graph"
-require "facemock/database"
-require "facemock/errors"
-require "facemock/auth_hash"
+require 'facemock/version'
+require 'facemock/config'
+require 'facemock/fb_graph'
+require 'facemock/database'
+require 'facemock/errors'
+require 'facemock/auth_hash'
+require 'facemock/application'
+require 'facemock/user'
+require 'facemock/permission'
+require 'facemock/authorization_code'
 
 module Facemock 
   extend self
@@ -22,7 +26,7 @@ module Facemock
 
   def auth_hash(access_token=nil)
     if access_token.kind_of?(String) && access_token.size > 0
-      user = Facemock::Database::User.find_by_access_token(access_token)
+      user = Facemock::User.find_by_access_token(access_token)
       if user
         Facemock::AuthHash.new({
           provider:    "facebook",

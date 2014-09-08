@@ -77,8 +77,8 @@ describe Facemock do
       before do
         stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
         @database = Facemock::Database.new
-        application = Facemock::Database::Application.create!
-        @user = Facemock::Database::User.create!(application_id: application.id)
+        application = Facemock::Application.create!
+        @user = Facemock::User.create!(application_id: application.id)
         @access_token = @user.access_token
       end
       after { @database.drop }

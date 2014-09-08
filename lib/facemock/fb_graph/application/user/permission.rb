@@ -1,8 +1,11 @@
+require 'facemock/user'
+require 'facemock/permission'
+
 module Facemock
   module FbGraph
     class Application
-      class User < Facemock::Database::User
-        class Permission < Facemock::Database::Permission
+      class User < Facemock::User
+        class Permission < Facemock::Permission
         end
       end
     end
