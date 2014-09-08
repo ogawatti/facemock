@@ -4,7 +4,7 @@ require 'facemock/fb_graph/application/user/permission'
 module Facemock
   module FbGraph
     class Application
-      class User < Facemock::Database::User
+      class User < Facemock::User
         attr_reader :permission_objects
 
         def initialize(options={})

@@ -2,6 +2,7 @@ require 'fb_graph'
 require 'facemock/config'
 require 'facemock/fb_graph/user'
 require 'facemock/fb_graph/application'
+require 'facemock/fb_graph/exception'
 
 module Facemock
   module FbGraph

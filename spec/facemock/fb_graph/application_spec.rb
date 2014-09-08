@@ -16,7 +16,7 @@ describe Facemock::FbGraph::Application do
   after  { @database.drop }
 
   describe '#new' do
-    before { @default_record_size = Facemock::Database::Application.all.size }
+    before { @default_record_size = Facemock::Application.all.size }
 
     context 'without argument' do
       subject { lambda { Facemock::FbGraph::Application.new } }
@@ -29,7 +29,7 @@ describe Facemock::FbGraph::Application do
           expect(@app.identifier).to eq @id
           expect(@app.secret).to be_nil
           expect(@app.access_token).to be_nil
-          expect(Facemock::Database::Application.all.size).to eq @default_record_size
+          expect(Facemock::Application.all.size).to eq @default_record_size
         end
       end
 
@@ -57,7 +57,7 @@ describe Facemock::FbGraph::Application do
           expect(@app.identifier).to eq @id
           expect(@app.secret).to be_nil
           expect(@app.access_token).to be_nil
-          expect(Facemock::Database::Application.all.size).to eq @default_record_size
+          expect(Facemock::Application.all.size).to eq @default_record_size
         end
       end
 
@@ -71,7 +71,7 @@ describe Facemock::FbGraph::Application do
           expect(@app.identifier).to eq facebook_app_id
           expect(@app.secret).to eq @options[:secret]
           expect(@app.access_token).to eq @options[:access_token]
-          expect(Facemock::Database::Application.all.size).to eq @default_record_size
+          expect(Facemock::Application.all.size).to eq @default_record_size
         end
       end
     end
