@@ -99,7 +99,7 @@ describe Facemock::User do
 
         describe '.size' do
           subject { Facemock::User.new.access_token.size }
-          it { is_expected.to eq 128 }
+          it { is_expected.to be <= 255 }
         end
       end
 
@@ -123,6 +123,23 @@ describe Facemock::User do
         subject { Facemock::User.new(@opts).id }
         it { is_expected.to be > 0 }
         it { is_expected.to be < 100010000000000 }
+      end
+    end
+
+    # TODO : DOING
+    context 'with identifier option' do
+      before { @opts = { identifier: 100010000000000 } }
+      subject { Facemock::User.new(@opts) }
+      it { is_expected.to be_kind_of Facemock::User }
+
+      describe '.id' do
+        subject { Facemock::User.new(@opts).id }
+        it { is_expected.to eq @opts[:identifier] }
+      end
+
+      describe '.identifier' do
+        subject { Facemock::User.new(@opts).identifier }
+        it { is_expected.to eq @opts[:identifier] }
       end
     end
 

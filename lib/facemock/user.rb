@@ -10,12 +10,13 @@ module Facemock
 
     def initialize(options={})
       opts = Hashie::Mash.new(options)
-      @id             = (opts.id.to_i > 0) ? opts.id.to_i : ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
+      id = opts.id || opts.identifier
+      @id             = (id.to_i > 0) ? id.to_i : ("10000" + (0..9).to_a.shuffle[0..10].join).to_i
       @name           = opts.name         || rand(36**10).to_s(36)
       @email          = opts.email        || name.gsub(" ", "_") + "@example.com"
       @password       = opts.password     || rand(36**10).to_s(36)
       @installed      = opts.installed    || false
-      @access_token   = opts.access_token || Digest::SHA512.hexdigest(identifier.to_s)
+      @access_token   = opts.access_token || rand(36**255).to_s(36)
       app_id = opts.application_id.to_i
       @application_id = (app_id > 0) ? app_id : nil
       @created_at     = opts.created_at
