@@ -214,7 +214,6 @@ module Facemock
         case method_name
         when /^find_by_(.+)/     then define_find_by_column(column_name)
         when /^find_all_by_(.+)/ then define_find_all_by_column(column_name)
-        else false
         end
       end
 

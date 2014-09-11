@@ -73,6 +73,23 @@ describe Facemock do
       end
     end
 
+    context 'with incorrect access_token' do
+      before do
+        stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+        @database = Facemock::Database.new
+        @user = Facemock::User.new
+        @access_token = @user.access_token
+      end
+
+      context 'that is incorrect' do
+        it 'should return empty AuthHash' do
+          auth_hash = Facemock.auth_hash(@access_token)
+          expect(auth_hash).to be_kind_of Facemock::AuthHash
+          expect(auth_hash).to be_empty
+        end
+      end
+    end
+
     context 'with access_token' do
       before do
         stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
@@ -82,9 +99,6 @@ describe Facemock do
         @access_token = @user.access_token
       end
       after { @database.drop }
-
-      context 'that is incorrect' do
-      end
 
       context 'that is correct' do
         it 'should return AuthHash with some keys and value' do
