@@ -41,8 +41,10 @@ module Facemock
         app = Facemock::Application.create!({ id: app_id, secret: app_secret })
         users.each do |options|
           user = Facemock::User.new(options)
-          user.application_id = app.id
-          user.save!
+          unless Facemock::User.find_by_id(user.id)
+            user.application_id = app.id
+            user.save!
+          end
         end
       end
     end

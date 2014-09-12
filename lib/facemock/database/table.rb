@@ -214,7 +214,6 @@ module Facemock
         case method_name
         when /^find_by_(.+)/     then define_find_by_column(column_name)
         when /^find_all_by_(.+)/ then define_find_all_by_column(column_name)
-        else false
         end
       end
 
@@ -279,14 +278,12 @@ module Facemock
         opts = Hashie::Mash.new(options)
         instance = self.class.new
         column_names.each do |column_name|
-          if column_name != :created_at
-            if self.class.column_notnull(column_name) && column_is_empty?(column_name)
-              raise Facemock::Errors::ColumnTypeNotNull, "#{column_name} is null"
-            end
-            instance.send(column_name.to_s + "=", self.send(column_name))
-            if opts.send(column_name)
-              instance.send(column_name.to_s + "=", opts.send(column_name))
-            end
+          next if column_name == :created_at
+          notnull_check(column_name)
+          instance.send(column_name.to_s + "=", self.send(column_name))
+
+          if opts.send(column_name)
+            instance.send(column_name.to_s + "=", opts.send(column_name))
           end
         end
 
@@ -350,6 +347,12 @@ module Facemock
       def self.column_notnull(column_name)
         return nil unless column_names.include?(column_name.to_s.to_sym)
         table_info.send(column_name).notnull
+      end
+
+      def notnull_check(column_name)
+        if self.class.column_notnull(column_name) && column_is_empty?(column_name)
+          raise Facemock::Errors::ColumnTypeNotNull, "#{column_name} is null"
+        end
       end
     end
   end
