@@ -175,19 +175,19 @@ describe Facemock::Config do
           expect(Facemock::Application.all.count).to eq app_count
           expect(Facemock::User.all.count).to eq user_count
         end
-      end
 
-      context 'when already exist specified users' do
-        before do
-          @path = create_temporary_yaml_file(yaml_load_data)
-          Facemock::Config.load_users(@path)
-        end
+        context 'when already exist specified users' do
+          before do
+            Facemock::Config.load_users(@path)
+          end
 
-        it 'should not raise error' do
-          size = Facemock::User.all.size
-          expect(size).to eq 3
-          Facemock::Config.load_users(@path)
-          expect(size).to eq 3
+          it 'should not raise error' do
+            size = Facemock::User.all.size
+            expect(size).to eq 3
+            path = create_temporary_yaml_file(yaml_load_data)
+            Facemock::Config.load_users(path)
+            expect(size).to eq 3
+          end
         end
       end
     end
