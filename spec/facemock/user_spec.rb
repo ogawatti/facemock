@@ -67,7 +67,7 @@ describe Facemock::User do
 
         describe '.size' do
           subject { Facemock::User.new.name.size }
-          it { is_expected.to be <= 10 }
+          it { is_expected.to be > 0 }
         end
       end
 
@@ -75,7 +75,7 @@ describe Facemock::User do
         before { @user = Facemock::User.new }
         subject { @user.email }
         it { is_expected.to be_kind_of String }
-        it { is_expected.to eq "#{@user.name}@example.com" }
+        it { is_expected.to match /^.+@.+$/ }
       end
 
       describe '.password' do
@@ -84,7 +84,7 @@ describe Facemock::User do
 
         describe '.size' do
           subject { Facemock::User.new.password.size }
-          it { is_expected.to be <= 10 }
+          it { is_expected.to be_between(8, 16) }
         end
       end
 
@@ -99,7 +99,7 @@ describe Facemock::User do
 
         describe '.size' do
           subject { Facemock::User.new.access_token.size }
-          it { is_expected.to be <= 255 }
+          it { is_expected.to eq 255 }
         end
       end
 
@@ -151,25 +151,6 @@ describe Facemock::User do
       describe '.application_id' do
         subject { Facemock::User.new(@opts).application_id }
         it { is_expected.to be_nil }
-      end
-    end
-
-    context 'with name option' do
-      before do
-        @name = "test user"
-        @opts = { name: @name }
-      end
-      subject { Facemock::User.new(@opts) }
-      it { is_expected.to be_kind_of Facemock::User }
-
-      context '.name' do
-        subject { Facemock::User.new(@opts).name }
-        it { is_expected.to eq @name }
-      end
-
-      context '.email' do
-        subject { Facemock::User.new(@opts).email }
-        it { is_expected.to eq @name.gsub(" ", "_") + "@example.com" }
       end
     end
 

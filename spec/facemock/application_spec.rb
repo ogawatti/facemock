@@ -39,6 +39,7 @@ describe Facemock::Application do
       describe '.id' do
         subject { Facemock::Application.new.id }
         it { is_expected.to be > 0 }
+        it { is_expected.to be < 1000000000000000 }
       end
 
       describe '.secret' do
@@ -47,7 +48,7 @@ describe Facemock::Application do
 
         describe '.size' do
           subject { Facemock::Application.new.secret.size }
-          it { is_expected.to be <= 32 }
+          it { is_expected.to eq 32 }
         end
       end
 
