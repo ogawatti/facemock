@@ -53,7 +53,7 @@ describe Facemock::AuthorizationCode do
           string1 = Facemock::AuthorizationCode.new.string
           string2 = Facemock::AuthorizationCode.new.string
           expect(string1).to be_kind_of String
-          expect(string1.size).to be < 256
+          expect(string1.size).to eq 255
           expect(string1).not_to eq string2
         end
       end

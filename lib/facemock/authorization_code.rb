@@ -8,7 +8,7 @@ module Facemock
     def initialize(options={})
       opts = Hashie::Mash.new(options)
       @id         = opts.id
-      @string     = opts.string || rand(36**255).to_s(36)
+      @string     = opts.string || Faker::Lorem.characters
       @user_id    = opts.user_id
       @created_at = opts.created_at
     end

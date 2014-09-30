@@ -55,13 +55,6 @@ describe Facemock::FbGraph::Application::User do
         end
       end
     end
-
-    context 'with only name option' do
-      before { @options = { name: "test_user" } }
-
-      subject { @user = Facemock::FbGraph::Application::User.new(@options).email }
-      it { is_expected.to eq "#{@options[:name]}@example.com" }
-    end
   end
 
   describe '#permission' do
