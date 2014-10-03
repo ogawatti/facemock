@@ -59,7 +59,7 @@ describe Facemock do
   describe '.auth_hash' do
     context 'withou argument' do
       subject { Facemock.auth_hash }
-      it { is_expected.to be_kind_of Facemock::AuthHash }
+      it { is_expected.to be_kind_of Facemock::OmniAuth::AuthHash }
       it { is_expected.to be_empty }
     end
 
@@ -67,7 +67,7 @@ describe Facemock do
       it 'should return empty hash' do
         [nil, false, true, 1, ""].each do |argument|
           value = Facemock.auth_hash(argument)
-          expect(value).to be_kind_of Facemock::AuthHash
+          expect(value).to be_kind_of Facemock::OmniAuth::AuthHash
           expect(value).to be_empty
         end
       end
@@ -84,7 +84,7 @@ describe Facemock do
       context 'that is incorrect' do
         it 'should return empty AuthHash' do
           auth_hash = Facemock.auth_hash(@access_token)
-          expect(auth_hash).to be_kind_of Facemock::AuthHash
+          expect(auth_hash).to be_kind_of Facemock::OmniAuth::AuthHash
           expect(auth_hash).to be_empty
         end
       end
@@ -103,7 +103,7 @@ describe Facemock do
       context 'that is correct' do
         it 'should return AuthHash with some keys and value' do
           auth_hash = Facemock.auth_hash(@access_token)
-          expect(auth_hash).to be_kind_of Facemock::AuthHash
+          expect(auth_hash).to be_kind_of Facemock::OmniAuth::AuthHash
           expect(auth_hash).not_to be_empty
           expect(auth_hash.provider).to eq "facebook"
           expect(auth_hash.uid).to eq @user.id

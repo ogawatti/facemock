@@ -126,7 +126,6 @@ describe Facemock::User do
       end
     end
 
-    # TODO : DOING
     context 'with identifier option' do
       before { @opts = { identifier: 100010000000000 } }
       subject { Facemock::User.new(@opts) }

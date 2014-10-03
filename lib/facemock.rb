@@ -1,13 +1,15 @@
 require 'facemock/version'
 require 'facemock/config'
 require 'facemock/fb_graph'
+require 'facemock/omniauth'
 require 'facemock/database'
 require 'facemock/errors'
-require 'facemock/auth_hash'
 require 'facemock/application'
 require 'facemock/user'
 require 'facemock/permission'
 require 'facemock/authorization_code'
+require 'facemock/login'
+require 'facemock/authentication'
 
 module Facemock 
   extend self
@@ -28,7 +30,7 @@ module Facemock
     if access_token.kind_of?(String) && access_token.size > 0
       user = Facemock::User.find_by_access_token(access_token)
       if user
-        Facemock::AuthHash.new({
+        Facemock::OmniAuth::AuthHash.new({
           provider:    "facebook",
           uid:         user.id,
           info:        { name:     user.name },
@@ -36,10 +38,10 @@ module Facemock
           extra:       { raw_info: { id: user.id, name: user.name } }
         })
       else
-        Facemock::AuthHash.new
+        Facemock::OmniAuth::AuthHash.new
       end
     else
-      Facemock::AuthHash.new
+      Facemock::OmniAuth::AuthHash.new
     end
   end
 end
