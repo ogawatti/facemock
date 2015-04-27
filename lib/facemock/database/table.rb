@@ -1,24 +1,19 @@
 require 'facemock/database'
 require 'sqlite3'
 require 'hashie'
+require 'active_support/core_ext/string/inflections'
 
 module Facemock
   class Database
     class Table
-      # 以下は継承先でオーバーライド必須
-      #  * TABLE_NAME, COLUMN_NAMES
-      #  * initialize()
-      TABLE_NAME = :tables
-      COLUMN_NAMES = [:id, :text, :active, :number, :created_at]
-      CHILDREN = []
-
       def initialize(options={})
         opts = Hashie::Mash.new(options)
-        self.id = opts.id
-        self.text = opts.text
-        self.active = opts.active || false
-        self.number = opts.number
-        self.created_at = opts.created_at
+        column_names.each do |column_name|
+          if opts.send(column_name)
+            method_name = column_name.to_s + "="
+            send(method_name, opts.delete(column_name))
+          end
+        end
       end
 
       def save!(options={})
@@ -33,13 +28,16 @@ module Facemock
 
       def destroy
         raise unless persisted?
-        self.class.children.each do |klass|
-          klass_last_name = self.class.name.split("::").last.downcase
-          find_method_name = "find_all_by_#{klass_last_name}_id"
-          objects = klass.send(find_method_name, self.id)
-          objects.each{|object| object.destroy }
+        self.class.dependent_destroy.each do |klass_name|
+          klass = eval(klass_name.to_s.camelize)
+          if self.class.children.include?(klass_name)
+            destroy_children(klass)
+          elsif self.class.parents.include?(klass_name)
+            destroy_parents(klass)
+          end
         end
 
+        # 自身のレコード削除
         execute "DELETE FROM #{table_name} WHERE ID = #{self.id};"
         self
       end
@@ -59,18 +57,22 @@ module Facemock
         case name
         when :identifier  then return send(:id)
         when :identifier= then return send(:id=, *args)
+        end
+
+        if column_getter_method?(name, *args)
+          super unless define_column_getter(name)
+          return send(name)
+        elsif column_setter_method?(name, *args)
+          super unless define_column_setter(name)
+          return send(name, args.first)
+        elsif children_method?(name)
+          super unless define_children_method(name)
+          return send(name)
+        elsif parents_method?(name)
+          super unless define_parents_method(name)
+          return send(name)
         else
-          if column_names.include?(method_name) && args.size <= 1
-            if !name.to_s.include?("=") && args.empty?
-              define_column_getter(name)
-              return send(name)
-            else
-              define_column_setter(name)
-              return send(name, args.first)
-            end
-          else
-            super
-          end
+          super
         end
       end
 
@@ -127,15 +129,21 @@ module Facemock
       end
 
       def self.table_name
-        self::TABLE_NAME
+        self.to_s.split("::").last.underscore.pluralize
       end
 
       def self.column_names
-        self::COLUMN_NAMES
+        table_info.inject([]) do |ary, (key, value)|
+          ary << key.to_sym
+        end
       end
 
       def self.children
-        self::CHILDREN
+        has_many_target + has_one_target
+      end
+
+      def self.parents
+        belongs_to_target
       end
 
       def self.column_type(column_name)
@@ -163,6 +171,94 @@ module Facemock
 
       private
 
+      def destroy_children(klass)
+        column_name = self.class.table_name.to_s.singularize + "_id"
+        find_method_name = "find_all_by_#{column_name}"
+        find_method_argument = self.id
+        objects = klass.send(find_method_name, find_method_argument)
+        objects.each{|object| object.destroy }
+      end
+
+      def destroy_parents(klass)
+        column_name = klass.table_name.to_s.singularize + "_id"
+        find_method_name = "find_by_id"
+        find_method_argument = eval("self.#{column_name}")
+        object = klass.send(find_method_name, find_method_argument)
+        object.destroy
+      end
+
+      def self.has_many_target
+        @has_many_target ||= []
+      end
+
+      def self.has_one_target
+        @has_one_target ||= []
+      end
+
+      def self.belongs_to_target
+        @belongs_to_target ||= []
+      end
+
+      def column_getter_method?(name, *args)
+        column_accessor_method?(name, *args) && getter?(name, *args)
+      end
+
+      def column_setter_method?(name, *args)
+        column_accessor_method?(name, *args) && !getter?(name, *args)
+      end
+
+      def column_accessor_method?(name, *args)
+        method_name = name.to_s.include?("=") ? name.to_s[0...-1].to_sym : name
+        column_names.include?(method_name) && args.size <= 1
+      end
+
+      def getter?(name, *args)
+        !name.to_s.include?("=") && args.empty?
+      end
+
+      def children_method?(name)
+        singularized_name = name.to_s.singularize.to_sym
+        self.class.children.include?(singularized_name)
+      end
+
+      def parents_method?(name)
+        singularized_name = name.to_s.singularize.to_sym
+        self.class.parents.include?(singularized_name)
+      end
+
+      def has_many_method?(name)
+        klass_name = name.to_s.singularize.to_sym
+        self.class.has_many_target.include?(klass_name) &&  child_index_method?(name)
+      end
+
+      def child_index_method?(name)
+        name == name.to_s.pluralize.to_sym
+      end
+
+      def has_one_method?(name)
+        self.class.has_one_target.include?(name)
+      end
+
+      def belongs_to_method?(name)
+        self.class.belongs_to_target.include?(name)
+      end
+
+      def self.has_many(table_name, options={})
+        klass_name = table_name.to_s.singularize.to_sym
+        add_has_many_target(klass_name)
+        add_dependent_destroy(klass_name) if options[:dependent] == :destroy
+      end
+
+      def self.has_one(klass_name, options={})
+        add_has_one_target(klass_name)
+        add_dependent_destroy(klass_name) if options[:dependent] == :destroy
+      end
+
+      def self.belongs_to(klass_name, options={})
+        add_belongs_to_target(klass_name)
+        add_dependent_destroy(klass_name) if options[:dependent] == :destroy
+      end
+
       def execute(sql)
         self.class.execute(sql)
       end
@@ -179,35 +275,61 @@ module Facemock
         records
       end
 
-      def self.record_to_object(record)
+      def self.record_to_object(record, klass=self)
         return nil unless record
-        self.new(record_to_hash(record))
+        klass.new(record_to_hash(record, klass))
       end
 
-      def self.records_to_objects(records)
+      def self.records_to_objects(records, klass=self)
         records.inject([]) do |objects, record|
-          objects << record_to_object(record)
+          objects << record_to_object(record, klass)
         end
       end
 
-      def record_to_hash(record)
-        self.class.record_to_hash(record)
+      def record_to_hash(record, klass=self.class)
+        self.class.record_to_hash(record, klass)
       end
 
       # 以下の形式のHashが返される
       #   { id: x, ..., created_at: yyyy-mm-dd :hh:mm +xxxx }
-      def self.record_to_hash(record)
+      def self.record_to_hash(record, klass=self)
         hash = Hashie::Mash.new
-        column_names.each_with_index do |column_name, index|
+        klass.column_names.each_with_index do |column_name, index|
           value = (record[index] == "") ? nil : record[index]
           parsed_value = case column_type(column_name)
-          when "BOOLEAN"  then eval(value)
+          when "BOOLEAN"  then value.nil? ? false : eval(value.to_s)
           when "DATETIME" then Time.parse(value)
           else  value
           end
           hash.send(column_name.to_s + "=", parsed_value)
         end
         hash
+      end
+
+      def define_and_send_column_accessor_method(name, *args)
+        if getter?(name, *args)
+          define_column_getter(name)
+          return send(name)
+        else
+          define_column_setter(name)
+          return send(name, args.first)
+        end
+      end
+
+      def define_children_method(name)
+        if has_many_method?(name)
+          define_has_many_method(name)
+        elsif has_one_method?(name)
+          define_has_one_method(name)
+        else
+          false
+        end
+      end
+
+      def define_parents_method(name)
+        if belongs_to_method?(name)
+          define_belongs_to_method(name)
+        end
       end
 
       def self.define_find_method(method_name, column_name)
@@ -257,12 +379,56 @@ module Facemock
         true
       end
 
+      def define_has_many_method(method_name)
+        column_name = self.class.table_name.singularize + "_id"
+        klass = eval(method_name.to_s.singularize.camelcase)
+        self.class.class_eval <<-EOF
+          def #{method_name}
+            id = self.id
+            sql = "SELECT * FROM #{method_name} WHERE #{column_name} = "
+            sql += id.to_s + ";"
+            records = execute sql
+            self.class.records_to_objects(records, #{klass})
+          end
+        EOF
+        true
+      end
+
+      def define_has_one_method(method_name)
+        column_name = self.class.table_name.singularize + "_id"
+        klass = eval(method_name.to_s.camelize)
+        self.class.class_eval <<-EOF
+          def #{method_name}
+            id = self.id
+            sql = "SELECT * FROM #{klass.table_name} WHERE #{column_name} = "
+            sql += id.to_s + " ORDER BY ID DESC LIMIT 1 ;"
+            records = execute sql
+            self.class.record_to_object(records.first, #{klass})
+          end
+        EOF
+        true
+      end
+
+      def define_belongs_to_method(method_name)
+        column_value = eval("self.#{method_name}_id")
+        klass = eval(method_name.to_s.camelize)
+        self.class.class_eval <<-EOF
+          def #{method_name}
+            sql = "SELECT * FROM #{klass.table_name} WHERE ID = #{column_value} LIMIT 1 ;"
+            records = execute sql
+            self.class.record_to_object(records.first, #{klass})
+          end
+        EOF
+        true
+      end
+
       def define_column_getter(name)
         self.class.class_eval <<-EOF
           def #{name}
             self.instance_variable_get(:@#{name})
           end
         EOF
+        true
       end
 
       def define_column_setter(name)
@@ -271,6 +437,36 @@ module Facemock
             instance_variable_set(:@#{name.to_s.gsub("=", "")}, value)
           end
         EOF
+        true
+      end
+
+      def self.dependent_destroy
+        @dependent_destroy ||= []
+      end
+
+      def self.add_child(klass_name)
+        @children ? @children << klass_name : @children = [ klass_name ]
+        klass_name
+      end
+
+      def self.add_has_many_target(klass_name)
+        @has_many_target ? @has_many_target << klass_name : @has_many_target = [ klass_name ]
+        klass_name
+      end
+
+      def self.add_has_one_target(klass_name)
+        @has_one_target ? @has_one_target << klass_name : @has_one_target = [ klass_name ]
+        klass_name
+      end
+
+      def self.add_belongs_to_target(klass_name)
+        @belongs_to_target ? @belongs_to_target << klass_name : @belongs_to_target = [ klass_name ]
+        klass_name
+      end
+
+      def self.add_dependent_destroy(klass_name)
+        @dependent_destroy ? @dependent_destroy << klass_name : @dependent_destroy = [ klass_name ]
+        klass_name
       end
 
       # DatabaseへのINSERTが成功してからインスタンスのフィールド値を更新する

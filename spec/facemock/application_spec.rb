@@ -7,7 +7,6 @@ describe Facemock::Application do
 
   let(:table_name)   { :applications }
   let(:column_names) { [ :id, :secret, :created_at ] }
-  let(:children)     { [ Facemock::User ] }
 
   let(:id)           { 1 }
   let(:secret)       { "test_secret" }
@@ -15,21 +14,6 @@ describe Facemock::Application do
   let(:options)      { { id: id, secret: secret, created_at: created_at } }
 
   after { remove_dynamically_defined_all_method }
-
-  describe '::TABLE_NAME' do
-    subject { Facemock::Application::TABLE_NAME }
-    it { is_expected.to eq table_name }
-  end
-
-  describe '::COLUMN_NAMES' do
-    subject { Facemock::Application::COLUMN_NAMES }
-    it { is_expected.to eq column_names }
-  end
-
-  describe '::CHILDREN' do
-    subject { Facemock::Application::CHILDREN }
-    it { is_expected.to eq children }
-  end
 
   describe '#initialize' do
     context 'without option' do
@@ -94,13 +78,18 @@ describe Facemock::Application do
     context 'when has user' do
       before do
         @application = Facemock::Application.create!
-        Facemock::User.create!(application_id: @application.id)
+        @user = Facemock::User.create!
+        Facemock::AccessToken.create!(application_id: @application.id, user_id: @user.id)
       end
 
-      it 'should delete permissions' do
+      it 'should delete access_tokens' do
         @application.destroy
-        users = Facemock::User.find_all_by_application_id(@application.id)
-        expect(users).to be_empty
+        access_tokens = Facemock::AccessToken.find_all_by_application_id(@application.id)
+        authorization_codes = Facemock::AuthorizationCode.find_all_by_user_id(@user.id)
+        expect(access_tokens).to be_empty
+        expect(authorization_codes).to be_empty
+        user = Facemock::User.find_by_id(@user.id)
+        expect(user).not_to be_nil
       end
     end
   end

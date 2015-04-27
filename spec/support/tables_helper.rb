@@ -1,10 +1,12 @@
+require 'active_support/core_ext/string/inflections'
+
 module TableHelper
   def remove_dynamically_defined_all_method
-    klasses = [Facemock::Database::Table,
-               Facemock::Application,
-               Facemock::User,
-               Facemock::Permission,
-               Facemock::AuthorizationCode ]
+    klasses = [ Facemock::Database::Table ]
+    Facemock::Database.tables.each do |table_name|
+      class_name = "Facemock::" + (table_name.to_s.singularize.camelcase)
+      klasses << eval(class_name)
+    end
     klasses.each do |klass|
       remove_dynamically_defined_class_method(klass)
       remove_dynamically_defined_instance_method(klass)
@@ -29,14 +31,16 @@ module TableHelper
   # テストで動的に定義したインスタンスメソッドを削除
   def remove_dynamically_defined_instance_method(klass)
     klass.column_names.each do |column_name|
-      getter = column_name
-      if klass.instance_methods.include?(getter)
-        klass.class_eval { remove_method getter }
-      end
+      if column_name != :id && column_name != :created_at
+        getter = column_name
+        if klass.instance_methods.include?(getter)
+          klass.class_eval { remove_method getter }
+        end
 
-      setter = (column_name.to_s + "=").to_sym
-      if klass.instance_methods.include?(setter)
-        klass.class_eval { remove_method setter }
+        setter = (column_name.to_s + "=").to_sym
+        if klass.instance_methods.include?(setter)
+          klass.class_eval { remove_method setter }
+        end
       end
     end
   end
