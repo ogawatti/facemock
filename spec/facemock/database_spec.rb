@@ -40,8 +40,7 @@ describe Facemock::Database do
   describe '#connect' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -53,8 +52,7 @@ describe Facemock::Database do
   describe '#disconnect' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -71,8 +69,7 @@ describe Facemock::Database do
 
   describe '#connected?' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -104,8 +101,7 @@ describe Facemock::Database do
   describe '#drop' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -129,8 +125,7 @@ describe Facemock::Database do
   describe '#clear' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
       expect(@database).to receive(:drop_tables)
       expect(@database).to receive(:create_tables)
     end
@@ -142,8 +137,7 @@ describe Facemock::Database do
 
   describe '#create_tables' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
       @database.drop_tables
     end
     after { @database.drop }
@@ -154,8 +148,7 @@ describe Facemock::Database do
 
   describe '#drop_table' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -188,8 +181,7 @@ describe Facemock::Database do
 
   describe '#drop_tables' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -213,8 +205,7 @@ describe Facemock::Database do
 
   describe '#filepath' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -229,8 +220,7 @@ describe Facemock::Database do
 
   describe '#table_exists?' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 

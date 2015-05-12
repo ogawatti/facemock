@@ -16,6 +16,14 @@ module Facemock
         end
       end
 
+      def self.database
+        @database ||= Facemock::Database.new
+      end
+
+      def self.database=(database)
+        @database = database
+      end
+
       def save!(options={})
         persisted? ? update!(options) : insert!(options)
       end
@@ -264,7 +272,7 @@ module Facemock
       end
 
       def self.execute(sql)
-        database = Facemock::Database.new
+        database.connect unless database.connected?
         records = database.connection.execute sql
         if records.empty? && sql =~ /^INSERT /
           records = database.connection.execute <<-SQL
@@ -304,16 +312,6 @@ module Facemock
           hash.send(column_name.to_s + "=", parsed_value)
         end
         hash
-      end
-
-      def define_and_send_column_accessor_method(name, *args)
-        if getter?(name, *args)
-          define_column_getter(name)
-          return send(name)
-        else
-          define_column_setter(name)
-          return send(name, args.first)
-        end
       end
 
       def define_children_method(name)
@@ -384,11 +382,14 @@ module Facemock
         klass = eval(method_name.to_s.singularize.camelcase)
         self.class.class_eval <<-EOF
           def #{method_name}
-            id = self.id
-            sql = "SELECT * FROM #{method_name} WHERE #{column_name} = "
-            sql += id.to_s + ";"
-            records = execute sql
-            self.class.records_to_objects(records, #{klass})
+            if id = self.id
+              sql = "SELECT * FROM #{method_name} WHERE #{column_name} = "
+              sql += id.to_s + ";"
+              records = execute sql
+              self.class.records_to_objects(records, #{klass})
+            else
+              []
+            end
           end
         EOF
         true
@@ -399,27 +400,38 @@ module Facemock
         klass = eval(method_name.to_s.camelize)
         self.class.class_eval <<-EOF
           def #{method_name}
-            id = self.id
-            sql = "SELECT * FROM #{klass.table_name} WHERE #{column_name} = "
-            sql += id.to_s + " ORDER BY ID DESC LIMIT 1 ;"
-            records = execute sql
-            self.class.record_to_object(records.first, #{klass})
+            if id = self.id
+              sql = "SELECT * FROM #{klass.table_name} WHERE #{column_name} = "
+              sql += id.to_s + " ORDER BY ID DESC LIMIT 1 ;"
+              records = execute sql
+              self.class.record_to_object(records.first, #{klass})
+            else
+              nil
+            end
           end
         EOF
         true
       end
 
       def define_belongs_to_method(method_name)
-        column_value = eval("self.#{method_name}_id")
         klass = eval(method_name.to_s.camelize)
         self.class.class_eval <<-EOF
           def #{method_name}
-            sql = "SELECT * FROM #{klass.table_name} WHERE ID = #{column_value} LIMIT 1 ;"
-            records = execute sql
-            self.class.record_to_object(records.first, #{klass})
+            if column_value = self.#{method_name}_id
+              sql = "SELECT * FROM #{klass.table_name} WHERE ID = "
+              sql += column_value.to_s + " LIMIT 1 ;"
+              records = execute sql
+              self.class.record_to_object(records.first, #{klass})
+            else
+              nil
+            end
           end
         EOF
         true
+      end
+
+      def remove_instance_method(method_name)
+        self.class.class_eval { remove_method method_name }
       end
 
       def define_column_getter(name)

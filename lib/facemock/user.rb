@@ -6,7 +6,7 @@ require 'facemock/authorization_code'
 module Facemock
   class User < Database::Table
     has_many :access_tokens, :dependent => :destroy
-    has_many :authorization_code, :dependent => :destroy
+    has_many :authorization_codes, :dependent => :destroy
 
     def initialize(options={})
       opts = Hashie::Mash.new(options)

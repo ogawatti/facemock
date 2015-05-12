@@ -9,12 +9,12 @@ describe Facemock::Database::Table do
   let(:children)     { [] }
 
   before do
-    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+    @database = Facemock::Database.new(db_name)
     create_tables_table_for_test
   end
 
   after do
-    Facemock::Database.new.drop
+    @database.drop
     remove_dynamically_defined_all_method
   end
 

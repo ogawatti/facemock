@@ -30,7 +30,9 @@ module TableHelper
 
   # テストで動的に定義したインスタンスメソッドを削除
   def remove_dynamically_defined_instance_method(klass)
-    klass.column_names.each do |column_name|
+    # klass.column_namesにするとdbがMigrateされるので、終わったらremoveする必要がある
+    # 暫定策としてletで定義した値を使う
+    column_names.each do |column_name|
       if column_name != :id && column_name != :created_at
         getter = column_name
         if klass.instance_methods.include?(getter)
