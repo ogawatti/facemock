@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::Application do
-  include TableHelper
-
   let(:db_name)      { ".test" }
   let(:column_names) { [ :id, :secret, :created_at ] }
   let(:id)           { 1 }

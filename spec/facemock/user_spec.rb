@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::User do
-  include TableHelper
-
   let(:db_name)        { ".test" }
   let(:table_name)     { :users }
   let(:column_names)   { [ :id,
@@ -193,5 +191,30 @@ describe Facemock::User do
         expect(authorization_codes).to be_empty
       end
     end
+  end
+
+  describe '#to_hash' do
+    before { @user = Facemock::User.new }
+
+    it 'should be include user info' do
+      hash = @user.to_hash
+      expect(hash).to be_instance_of Hash
+      expect(hash[:id]).to eq @user.id
+      expect(hash[:first_name]).to eq @user.name.split.first
+      expect(hash[:gender]).to eq "male"
+      expect(hash[:last_name]).to eq @user.name.split.last
+      expect(hash[:link]).to eq "http://www.facebook.com/#{@user.id}"
+      expect(hash[:locale]).to eq "ja_JP"
+      expect(hash[:name]).to eq @user.name
+      expect(hash[:timezone]).to eq 9
+      expect(hash[:updated_time]).to eq Time.parse("2014/07/22")
+      expect(hash[:verified]).to eq true
+    end
+  end
+
+  describe '#to_json' do
+    before { @user = Facemock::User.new }
+    subject { @user.to_json }
+    it { is_expected.to eq @user.to_hash.to_json }
   end
 end

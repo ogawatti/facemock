@@ -2,6 +2,7 @@ require 'faker'
 require 'facemock/database/table'
 require 'facemock/access_token'
 require 'facemock/authorization_code'
+require 'time'
 
 module Facemock
   class User < Database::Table
@@ -15,6 +16,23 @@ module Facemock
       @email      = opts.email || Faker::Internet.email
       @password   = opts.password || Faker::Internet.password
       @created_at = opts.created_at
+    end
+
+    def to_json
+      self.to_hash.to_json
+    end
+
+    def to_hash
+      { id:           id,
+        first_name:   name.split.first,
+        gender:       "male",
+        last_name:    name.split.last,
+        link:         "http://www.facebook.com/#{id}",
+        locale:       "ja_JP",
+        name:         name,
+        timezone:     9,
+        updated_time: Time.parse("2014/07/22"),
+        verified:     true }
     end
 
     private

@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::AccessToken do
-  include TableHelper
-
   let(:db_name)         { ".test" }
   let(:column_names)    { [ :id, :string, :user_id, :application_id, :created_at ] }
 
@@ -150,6 +148,64 @@ describe Facemock::AccessToken do
         permissions = Facemock::Permission.find_all_by_access_token_id(@access_token.id)
         expect(permissions).to be_empty
       end
+    end
+  end
+
+  describe '#valid?' do
+    before do
+      application = Facemock::Application.create!
+      user = Facemock::User.create!
+      options = { application_id: application.id, user_id: user.id }
+      @access_token = Facemock::AccessToken.create!(options)
+    end
+
+    subject { @access_token.valid? }
+    it { is_expected.to eq true }
+
+    context 'when user_id' do
+      context 'is nil' do
+        before { @access_token.user_id = nil }
+        it { is_expected.to eq false }
+      end
+
+      context 'is not Fixnum' do
+        before { @access_token.user_id = @access_token.user_id.to_s }
+        it { is_expected.to eq false }
+      end
+    end
+
+    context 'when application_id' do
+      context 'is nil' do
+        before { @access_token.application_id = nil }
+        it { is_expected.to eq false }
+      end
+
+      context 'is not Fixnum' do
+        before { @access_token.application_id = @access_token.application_id.to_s }
+        it { is_expected.to eq false }
+      end
+    end
+
+    context 'when string' do
+      context 'is nil' do
+        before { @access_token.string = nil }
+        it { is_expected.to eq false }
+      end
+
+      context 'is not String' do
+        before { @access_token.string = 1 }
+        it { is_expected.to eq false }
+      end
+    end
+
+    context 'when user does not find by user_id' do
+      before { @access_token.user.destroy }
+      it { is_expected.to eq false }
+    end
+
+    context 'when application does not find by application_id' do
+      before { @access_token.application.destroy }
+      it { is_expected.to eq false }
     end
   end
 end

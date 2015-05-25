@@ -430,10 +430,6 @@ module Facemock
         true
       end
 
-      def remove_instance_method(method_name)
-        self.class.class_eval { remove_method method_name }
-      end
-
       def define_column_getter(name)
         self.class.class_eval <<-EOF
           def #{name}
@@ -454,11 +450,6 @@ module Facemock
 
       def self.dependent_destroy
         @dependent_destroy ||= []
-      end
-
-      def self.add_child(klass_name)
-        @children ? @children << klass_name : @children = [ klass_name ]
-        klass_name
       end
 
       def self.add_has_many_target(klass_name)

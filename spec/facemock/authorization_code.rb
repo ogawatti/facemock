@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::AuthorizationCode do
-  include TableHelper
-
   let(:db_name)        { ".test" }
   let(:column_names)   { [ :id, :string, :user_id, :application_id, :created_at ] }
 

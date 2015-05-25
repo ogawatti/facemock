@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 describe Facemock::Permission do
-  include TableHelper
-
   let(:db_name)         { ".test" }
   let(:column_names)    { [ :id, :name, :access_token_id, :created_at ] }
 
