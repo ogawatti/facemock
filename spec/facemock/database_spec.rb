@@ -4,7 +4,6 @@ describe Facemock::Database do
   let(:db_name)         { ".test" }
   let(:default_db_name) { "facemock" }
   let(:adapter)         { "sqlite3" }
-  let(:table_names)     { [:applications, :users, :permissions, :authorization_codes] }
   let(:db_directory)    { File.expand_path("../../../db", __FILE__) }
   let(:db_filepath)     { File.join(db_directory, "#{db_name}.#{adapter}") }
 
@@ -16,11 +15,6 @@ describe Facemock::Database do
   describe '::DB_DIRECTORY' do
     subject { Facemock::Database::DB_DIRECTORY }
     it { is_expected.to eq db_directory }
-  end
-
-  describe '::TABLE_NAMES' do
-    subject { Facemock::Database::TABLE_NAMES }
-    it { is_expected.to eq table_names }
   end
 
   describe '::DEFAULT_DB_NAMES' do
@@ -46,8 +40,7 @@ describe Facemock::Database do
   describe '#connect' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -59,8 +52,7 @@ describe Facemock::Database do
   describe '#disconnect' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -77,8 +69,7 @@ describe Facemock::Database do
 
   describe '#connected?' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -110,8 +101,7 @@ describe Facemock::Database do
   describe '#drop' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -135,8 +125,7 @@ describe Facemock::Database do
   describe '#clear' do
     before do
       allow_any_instance_of(Facemock::Database).to receive(:create_tables) { true }
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
       expect(@database).to receive(:drop_tables)
       expect(@database).to receive(:create_tables)
     end
@@ -148,8 +137,7 @@ describe Facemock::Database do
 
   describe '#create_tables' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
       @database.drop_tables
     end
     after { @database.drop }
@@ -160,14 +148,13 @@ describe Facemock::Database do
 
   describe '#drop_table' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
     context 'when table exist' do
       it 'should return true' do
-        table_names.each do |table_name|
+        Facemock::Database.tables.each do |table_name|
           expect(@database.drop_table(table_name)).to eq true
         end
       end
@@ -176,7 +163,7 @@ describe Facemock::Database do
     context 'when table does not exist' do
       it 'should return true' do
         @database.drop_tables
-        table_names.each do |table_name|
+        Facemock::Database.tables.each do |table_name|
           expect(@database.drop_table(table_name)).to eq false
         end
       end
@@ -185,7 +172,7 @@ describe Facemock::Database do
     context 'when database does not exist' do
       it 'should return false' do
         @database.drop
-        table_names.each do |table_name|
+        Facemock::Database.tables.each do |table_name|
           expect(@database.drop_table(table_name)).to eq false
         end
       end
@@ -194,8 +181,7 @@ describe Facemock::Database do
 
   describe '#drop_tables' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -205,7 +191,7 @@ describe Facemock::Database do
     end
 
     context 'when table does not exist' do
-      before { table_names.each{|table_name| @database.drop_table(table_name)} }
+      before { Facemock::Database.tables.each{|table_name| @database.drop_table(table_name)} }
       subject { @database.drop_tables }
       it { is_expected.to eq true }
     end
@@ -219,8 +205,7 @@ describe Facemock::Database do
 
   describe '#filepath' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
@@ -235,14 +220,13 @@ describe Facemock::Database do
 
   describe '#table_exists?' do
     before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
+      @database = Facemock::Database.new(db_name)
     end
     after { @database.drop }
 
     context 'when new' do
       it 'should exist all tables' do
-        table_names.each do |table_name|
+        Facemock::Database.tables.each do |table_name|
           expect(@database.table_exists?(table_name)).to eq true
         end
       end
@@ -252,7 +236,7 @@ describe Facemock::Database do
       before { @database.drop_tables }
 
       it 'should not exist any tables' do
-        table_names.each do |table_name|
+        Facemock::Database.tables.each do |table_name|
           expect(@database.table_exists?(table_name)).to eq false
         end
       end

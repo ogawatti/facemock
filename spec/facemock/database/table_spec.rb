@@ -9,42 +9,19 @@ describe Facemock::Database::Table do
   let(:children)     { [] }
 
   before do
-    stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
+    @database = Facemock::Database.new(db_name)
     create_tables_table_for_test
   end
 
   after do
-    Facemock::Database.new.drop
+    @database.drop
     remove_dynamically_defined_all_method
-  end
-
-  describe '::TABLE_NAME' do
-    subject { Facemock::Database::Table::TABLE_NAME }
-    it { is_expected.to eq table_name }
-  end
-
-  describe '::COLUMN_NAMES' do
-    subject { Facemock::Database::Table::COLUMN_NAMES }
-    it { is_expected.to eq column_names }
-  end
-
-  describe '::CHILDREN' do
-    subject { Facemock::Database::Table::CHILDREN }
-    it { is_expected.to eq children }
   end
 
   describe '#initialize' do
     context 'without option' do
       it 'should have accessor of column' do
         @table = Facemock::Database::Table.new
-        column_names.each do |column_name|
-           if column_name == :active
-             expect(@table.send(column_name)).to be false
-           else
-             expect(@table.send(column_name)).to be_nil
-           end
-        end
-
         @table.id = id = 1
         @table.text = text = "test"
         @table.active = active = true
@@ -91,13 +68,13 @@ describe Facemock::Database::Table do
           it 'should set value to id and created_at' do
             expect(@table.id).to be_nil
             expect(@table.text).to eq @text
-            expect(@table.active).to eq false
+            expect(@table.active).to eq nil
             expect(@table.number).to eq @number
             expect(@table.created_at).to be_nil
             @table.save!
             expect(@table.id).to be > 0
             expect(@table.text).to eq @text
-            expect(@table.active).to eq false
+            expect(@table.active).to eq false 
             expect(@table.number).to eq @number
             expect(@table.created_at).to be <= Time.now
           end
@@ -109,13 +86,13 @@ describe Facemock::Database::Table do
           it 'should set value to created_at and id does not change' do
             expect(@table.id).to eq @id
             expect(@table.text).to eq @text
-            expect(@table.active).to eq false
+            expect(@table.active).to eq nil
             expect(@table.number).to eq @number
             expect(@table.created_at).to be_nil
             @table.save!
             expect(@table.id).to eq @id
             expect(@table.text).to eq @text
-            expect(@table.active).to eq false
+            expect(@table.active).to eq false 
             expect(@table.number).to eq @number
             expect(@table.created_at).to be <= Time.now
           end
@@ -765,5 +742,15 @@ describe Facemock::Database::Table do
       subject { Facemock::Database::Table.column_type(:created_at) }
       it { is_expected.to eq "DATETIME" }
     end
+  end
+
+  describe '.table_name' do
+    subject { Facemock::Database::Table.table_name }
+    it { is_expected.to eq "tables" }
+  end
+
+  describe '.column_names' do
+    subject { Facemock::Database::Table.column_names }
+    it { is_expected.to eq column_names }
   end
 end

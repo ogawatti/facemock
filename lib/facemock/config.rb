@@ -2,25 +2,10 @@ require 'yaml'
 require 'hashie'
 require 'facemock/errors'
 require 'facemock/database'
-require 'facemock/fb_graph/application'
 
 module Facemock
   module Config
     extend self
-
-    def default_database
-      Facemock::Database.new
-    end
-
-    def database
-      default_database
-    end
-
-    def reset_database
-      db = Facemock::Database.new
-      db.disconnect!
-      db.drop
-    end
 
     def load_users(ymlfile)
       load_data = YAML.load_file(ymlfile)
@@ -41,15 +26,10 @@ module Facemock
         app = Facemock::Application.create!({ id: app_id, secret: app_secret })
         users.each do |options|
           user = Facemock::User.new(options)
-          unless Facemock::User.find_by_id(user.id)
-            user.application_id = app.id
-            user.save!
-          end
+          user.save! unless Facemock::User.find_by_id(user.id)
         end
       end
     end
-
-    private
 
     def validate_id(id)
       case id

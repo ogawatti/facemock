@@ -1,20 +1,32 @@
 require 'sqlite3'
 require 'facemock/database/table'
+require 'facemock/database/migrate'
 
 module Facemock
   class Database
     ADAPTER = "sqlite3"
     DB_DIRECTORY = File.expand_path("../../../db", __FILE__)
     DEFAULT_DB_NAME = "facemock"
-    TABLE_NAMES = [:applications, :users, :permissions, :authorization_codes]
 
-    attr_reader :name
     attr_reader :connection
 
     def initialize(name=nil)
-      @name = DEFAULT_DB_NAME
+      self.class.name = name if name
       connect
       create_tables
+      Database::Table.database = self
+    end
+
+    def name
+      self.class.name
+    end
+
+    def self.name
+      @name ||= DEFAULT_DB_NAME
+    end
+
+    def self.name=(name)
+      @name = name
     end
 
     def connect
@@ -36,6 +48,7 @@ module Facemock
     def drop
       disconnect!
       File.delete(filepath) if File.exist?(filepath)
+      self.class.name = DEFAULT_DB_NAME
       nil
     end
 
@@ -44,9 +57,21 @@ module Facemock
       create_tables
     end
 
+    def self.tables
+      Facemock::Database::Migrate.targets.inject([]) do |ary, klass|
+        ary << klass.table_name
+      end
+    end
+
+    def tables
+      self.class.tables
+    end
+
     def create_tables
-      TABLE_NAMES.each do |table_name|
-        self.send "create_#{table_name}_table" unless table_exists?(table_name)
+      Facemock::Database::Migrate.targets.each do |klass|
+        unless table_exists?(klass.table_name)
+          @connection.execute klass.create_table
+        end
       end
       true
     end
@@ -59,13 +84,12 @@ module Facemock
 
     def drop_tables
       return false unless File.exist?(filepath)
-      TABLE_NAMES.each{|table_name| drop_table(table_name) }
+      tables.each{|table_name| drop_table(table_name) }
       true
     end
 
     def filepath
-      name ||= @name
-      File.join(DB_DIRECTORY, "#{@name}.#{ADAPTER}")
+      File.join(DB_DIRECTORY, "#{name}.#{ADAPTER}")
     end
 
     def table_exists?(table_name)
@@ -74,56 +98,6 @@ module Facemock
         return true if table[1].to_s == table_name.to_s
       end
       false
-    end
-
-    private
-
-    def create_applications_table
-      @connection.execute <<-SQL
-        CREATE TABLE applications (
-          id          INTEGER   PRIMARY KEY AUTOINCREMENT,
-          secret      TEXT      NOT NULL,
-          created_at  DATETIME  NOT NULL,
-          UNIQUE(secret)
-        );
-      SQL
-    end
-
-    def create_users_table
-      @connection.execute <<-SQL
-        CREATE TABLE users (
-          id              INTEGER  PRIMARY KEY AUTOINCREMENT,
-          name            TEXT      NOT NULL,
-          email           TEXT      NOT NULL,
-          password        TEXT      NOT NULL,
-          installed       BOOLEAN   NOT NULL,
-          access_token    TEXT      NOT NULL,
-          application_id  INTEGER   NOT NULL,
-          created_at      DATETIME  NOT NULL,
-          UNIQUE(access_token));
-      SQL
-    end
-
-    def create_permissions_table
-      @connection.execute <<-SQL
-        CREATE TABLE permissions (
-          id          INTEGER   PRIMARY KEY AUTOINCREMENT,
-          name        TEXT      NOT NULL,
-          user_id     INTEGER   NOT NULL,
-          created_at  DATETIME  NOT NULL
-        );
-      SQL
-    end
-
-    def create_authorization_codes_table
-      @connection.execute <<-SQL
-        CREATE TABLE authorization_codes (
-          id          INTEGER   PRIMARY KEY AUTOINCREMENT,
-          string      TEXT      NOT NULL,
-          user_id     INTEGER   NOT NULL,
-          created_at  DATETIME  NOT NULL
-        );
-      SQL
     end
   end
 end

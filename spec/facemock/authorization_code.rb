@@ -1,36 +1,24 @@
 require 'spec_helper'
 
 describe Facemock::AuthorizationCode do
-  include TableHelper
+  let(:db_name)        { ".test" }
+  let(:column_names)   { [ :id, :string, :user_id, :application_id, :created_at ] }
 
-  let(:table_name)   { :authorization_codes }
-  let(:column_names) { [ :id, :string, :user_id, :created_at ] }
-  let(:children)     { [] }
-
-  let(:id)           { 1 }
-  let(:string)       { "test_code" }
-  let(:user_id)      { 1 }
-  let(:created_at)   { Time.now }
-  let(:options)      { { id: id, string: string, user_id: user_id, created_at: created_at } }
-
-  after { remove_dynamically_defined_all_method }
-
-  describe '::TABLE_NAME' do
-    subject { Facemock::AuthorizationCode::TABLE_NAME }
-    it { is_expected.to eq table_name }
-  end
-
-  describe '::COLUMN_NAMES' do
-    subject { Facemock::AuthorizationCode::COLUMN_NAMES }
-    it { is_expected.to eq column_names }
-  end
-
-  describe '::CHILDREN' do
-    subject { Facemock::AuthorizationCode::CHILDREN }
-    it { is_expected.to eq children }
-  end
+  let(:id)             { 1 }
+  let(:string)         { "test_code" }
+  let(:user_id)        { 1 }
+  let(:application_id) { 1 }
+  let(:created_at)     { Time.now }
+  let(:options)        { { id:             id, 
+                           string:         string, 
+                           user_id:        user_id, 
+                           application_id: application_id, 
+                           created_at:     created_at } }
 
   describe '#initialize' do
+    before { @database = Facemock::Database.new(db_name) }
+    after { @database.drop }
+
     context 'without option' do
       subject { Facemock::AuthorizationCode.new }
       it { is_expected.to be_kind_of Facemock::AuthorizationCode }
@@ -71,6 +59,48 @@ describe Facemock::AuthorizationCode do
           end
         end
       end
+    end
+  end
+
+  describe '#application' do
+    before { @database = Facemock::Database.new(db_name) }
+    after { @database.drop }
+
+    context 'when application_id is empty' do
+      before { @authorization_code = Facemock::AuthorizationCode.new }
+      subject { @authorization_code.application }
+      it { is_expected.to be_nil }
+    end
+
+    context 'when application_id is specified' do
+      before do
+        @application = Facemock::Application.create!
+        @authorization_code = Facemock::AuthorizationCode.new(application_id: @application.id)
+      end
+
+      subject { @authorization_code.application.id }
+      it { is_expected.to eq @application.id }
+    end
+  end
+
+  describe '#user' do
+    before { @database = Facemock::Database.new(db_name) }
+    after  { @database.drop }
+
+    context 'when user_id is empty' do
+      before { @authorization_code = Facemock::AuthorizationCode.new }
+      subject { @authorization_code.application }
+      it { is_expected.to be_nil }
+    end
+
+    context 'when user_id is specified' do
+      before do
+        @user = Facemock::User.create!
+        @authorization_code = Facemock::AuthorizationCode.new(user_id: @user.id)
+      end
+
+      subject { @authorization_code.user.id }
+      it { is_expected.to eq @user.id }
     end
   end
 end

@@ -23,6 +23,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "omniauth"
   spec.add_dependency "hashie"
   spec.add_dependency "faker"
+  spec.add_dependency "activesupport"
+  spec.add_dependency "webmock"
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
@@ -30,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "simplecov"
   spec.add_development_dependency "pry"
   spec.add_development_dependency "coveralls"
+  spec.add_development_dependency "rack-test"
 end

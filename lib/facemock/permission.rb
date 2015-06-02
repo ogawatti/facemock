@@ -2,15 +2,14 @@ require 'facemock/database/table'
 
 module Facemock
   class Permission < Database::Table
-    TABLE_NAME = :permissions
-    COLUMN_NAMES = [:id, :name, :user_id, :created_at]
+    belongs_to :access_token
 
     def initialize(options={})
       opts = Hashie::Mash.new(options)
-      @id         = opts.id
-      @name       = opts.name
-      @user_id    = opts.user_id
-      @created_at = opts.created_at
+      @id              = opts.id
+      @name            = opts.name
+      @access_token_id = opts.access_token_id
+      @created_at      = opts.created_at
     end
   end
 end

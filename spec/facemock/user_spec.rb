@@ -1,56 +1,29 @@
 require 'spec_helper'
 
 describe Facemock::User do
-  include TableHelper
-
   let(:db_name)        { ".test" }
   let(:table_name)     { :users }
   let(:column_names)   { [ :id,
                            :name,
                            :email,
                            :password,
-                           :installed,
-                           :access_token,
-                           :application_id,
                            :created_at ] }
-  let(:children)       { [ Facemock::Permission, 
-                           Facemock::AuthorizationCode ] }
 
   let(:id)             { 1 }
   let(:name)           { "test user" }
   let(:email)          { "hoge@fugapiyo.com" }
   let(:password)       { "testpass" }
-  let(:installed)      { true }
-  let(:access_token)   { "test_token" }
-  let(:application_id) { 1 }
   let(:created_at)     { Time.now }
   let(:options)        { { id:             id, 
                            name:           name,
                            email:          email,
                            password:       password,
-                           installed:      installed,
-                           access_token:   access_token,
-                           application_id: application_id,
                            created_at:     created_at } }
 
-  after { remove_dynamically_defined_all_method }
-
-  describe '::TABLE_NAME' do
-    subject { Facemock::User::TABLE_NAME }
-    it { is_expected.to eq table_name }
-  end
-
-  describe '::COLUMN_NAMES' do
-    subject { Facemock::User::COLUMN_NAMES }
-    it { is_expected.to eq column_names }
-  end
-
-  describe '::CHILDREN' do
-    subject { Facemock::User::CHILDREN }
-    it { is_expected.to eq children }
-  end
-
   describe '#initialize' do
+    before { @database = Facemock::Database.new(db_name) }
+    after { @database.drop }
+
     context 'without option' do
       subject { Facemock::User.new }
       it { is_expected.to be_kind_of Facemock::User }
@@ -88,26 +61,6 @@ describe Facemock::User do
         end
       end
 
-      describe '.installed' do
-        subject { Facemock::User.new.installed }
-        it { is_expected.to eq false }
-      end
-
-      describe '.access_token' do
-        subject { Facemock::User.new.access_token }
-        it { is_expected.to be_kind_of String }
-
-        describe '.size' do
-          subject { Facemock::User.new.access_token.size }
-          it { is_expected.to eq 255 }
-        end
-      end
-
-      describe '.application_id' do
-        subject { Facemock::User.new.application_id }
-        it { is_expected.to be_nil }
-      end
-
       describe '.created_at' do
         subject { Facemock::User.new.created_at }
         it { is_expected.to be_nil }
@@ -126,7 +79,6 @@ describe Facemock::User do
       end
     end
 
-    # TODO : DOING
     context 'with identifier option' do
       before { @opts = { identifier: 100010000000000 } }
       subject { Facemock::User.new(@opts) }
@@ -140,17 +92,6 @@ describe Facemock::User do
       describe '.identifier' do
         subject { Facemock::User.new(@opts).identifier }
         it { is_expected.to eq @opts[:identifier] }
-      end
-    end
-
-    context 'with application_id option but it is not integer' do
-      before { @opts = { application_id: "test_id" } }
-      subject { Facemock::User.new(@opts) }
-      it { is_expected.to be_kind_of Facemock::User }
-
-      describe '.application_id' do
-        subject { Facemock::User.new(@opts).application_id }
-        it { is_expected.to be_nil }
       end
     end
 
@@ -169,30 +110,111 @@ describe Facemock::User do
     end
   end
 
-  describe 'destroy' do
-    before do
-      stub_const("Facemock::Database::DEFAULT_DB_NAME", db_name)
-      @database = Facemock::Database.new
-    end
+  describe '#access_token' do
+    before { @database = Facemock::Database.new(db_name) }
     after { @database.drop }
 
-    context 'when has permission and authorizaion_code' do
+    context 'when does not have access_token' do
+      before { @user = Facemock::User.new }
+      subject { @user.access_tokens }
+      it { is_expected.to be_empty }
+    end
+
+    context 'when have some access_tokens' do
       before do
-        application = Facemock::Application.create!
-        @user = Facemock::User.create!(application_id: application.id)
-        permission = Facemock::Permission.new(name: "email", user_id: @user.id)
-        permission.save!
-        authorization_code = Facemock::AuthorizationCode.new(user_id: @user.id)
-        authorization_code.save!
+        @application = Facemock::Application.create!
+        @user = Facemock::User.create!
+        options = { application_id: @application.id, user_id: @user.id }
+        @access_token1 = Facemock::AccessToken.create!(options)
+        @access_token2 = Facemock::AccessToken.create!(options)
       end
 
-      it 'should delete permissions' do
+      subject { @user.access_tokens }
+      it { is_expected.not_to be_empty }
+
+      it 'should include its' do
+        expect(@user.access_tokens.first.id).to eq @access_token1.id
+        expect(@user.access_tokens.last.id).to eq @access_token2.id
+      end
+    end
+  end
+
+  describe '#authorization_code' do
+    before { @database = Facemock::Database.new(db_name) }
+    after { @database.drop }
+
+    context 'when does not have access_token' do
+      before { @user = Facemock::User.new }
+      subject { @user.access_tokens }
+      it { is_expected.to be_empty }
+    end
+
+    context 'when have some access_tokens' do
+      before do
+        @application = Facemock::Application.create!
+        @user = Facemock::User.create!
+        options = { application_id: @application.id, user_id: @user.id }
+        @authorization_code1 = Facemock::AuthorizationCode.create!(options)
+        @authorization_code2 = Facemock::AuthorizationCode.create!(options)
+      end
+
+      subject { @user.authorization_codes }
+      it { is_expected.not_to be_empty }
+
+      it 'should include its' do
+        expect(@user.authorization_codes.first.id).to eq @authorization_code1.id
+        expect(@user.authorization_codes.last.id).to eq @authorization_code2.id
+      end
+    end
+  end
+
+  describe '#destroy' do
+    before { @database = Facemock::Database.new(db_name) }
+    after { @database.drop }
+
+    context 'when has access tokens and authorization codes' do
+      before do
+        @application = Facemock::Application.create!
+        @user = Facemock::User.create!
+        options = { application_id: @application.id, user_id: @user.id }
+        2.times do
+          Facemock::AccessToken.create!(options)
+          Facemock::AuthorizationCode.create!(options)
+        end
+      end
+
+      it 'should delete access tokens and authorization codes' do
         @user.destroy
-        permissions = Facemock::Permission.find_all_by_user_id(@user.id)
-        expect(permissions).to be_empty
+        access_tokens = Facemock::AccessToken.find_all_by_user_id(@user.id)
         authorization_codes = Facemock::AuthorizationCode.find_all_by_user_id(@user.id)
+        expect(access_tokens).to be_empty
         expect(authorization_codes).to be_empty
       end
     end
+  end
+
+  describe '#to_hash' do
+    before { @user = Facemock::User.new }
+
+    it 'should be include user info' do
+      hash = @user.to_hash
+      expect(hash).to be_instance_of Hash
+      expect(hash[:id]).to eq @user.id
+      expect(hash[:first_name]).to eq @user.name.split.first
+      expect(hash[:gender]).to eq "male"
+      expect(hash[:last_name]).to eq @user.name.split.last
+      expect(hash[:link]).to eq "http://www.facebook.com/#{@user.id}"
+      expect(hash[:locale]).to eq "ja_JP"
+      expect(hash[:name]).to eq @user.name
+      expect(hash[:timezone]).to eq 9
+      expect(hash[:updated_time]).to eq Time.parse("2014/07/22")
+      expect(hash[:verified]).to eq true
+    end
+  end
+
+  describe '#to_json' do
+    before { @user = Facemock::User.new }
+    subject { @user.to_json }
+    it { is_expected.to eq @user.to_hash.to_json }
   end
 end
