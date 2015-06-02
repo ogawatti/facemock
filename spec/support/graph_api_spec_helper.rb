@@ -15,6 +15,14 @@ module GraphAPISpecHelper
     end
   end
 
+  shared_examples 'API 500 Internal Server Error' do
+    it 'should return 500 Internal Server Error' do
+      expect(last_response.status).to eq 500
+      header.each{|key, value| expect(last_response.header[key]).to eq value }
+      expect(last_response.body).to eq body
+    end
+  end
+
   shared_examples 'GraphAPI Error' do
     it 'should be equal expected error' do
       expect(error.message).to eq message

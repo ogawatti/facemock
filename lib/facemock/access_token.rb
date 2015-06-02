@@ -16,12 +16,15 @@ module Facemock
       @created_at     = opts.created_at
     end
 
+    def self.create_server_token!(application_id)
+      string = application_id.to_s + "|" + Faker::Lorem.characters[0..26]
+      options = { application_id: application_id, string: string }
+      self.create!(options)
+    end
+
     def valid?
-      [ user_id, application_id ].each do |column|
-        return false if column.blank? || !column.instance_of?(Fixnum)
-      end
+      return false if application_id.blank? || !application_id.instance_of?(Fixnum)
       return false if string.blank? || !string.instance_of?(String)
-      return false unless Facemock::User.find_by_id(user_id)
       return false unless Facemock::Application.find_by_id(application_id)
       true
     end

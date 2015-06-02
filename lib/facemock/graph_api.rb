@@ -1,6 +1,7 @@
 require 'webmock'
 require 'facemock/graph_api/me'
 require 'facemock/graph_api/root'
+require 'facemock/graph_api/oauth/access_token'
 require 'facemock/graph_api/error'
 
 module Facemock
@@ -11,7 +12,7 @@ module Facemock
 
     HOSTNAME    = "graph.facebook.com"
     PORT        = 443 
-    MIDDLEWARES = [ Me ]
+    MIDDLEWARES = [ Me, OAuth::AccessToken ]
 
     def on
       WebMock.enable!

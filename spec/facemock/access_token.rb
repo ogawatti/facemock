@@ -154,25 +154,14 @@ describe Facemock::AccessToken do
   describe '#valid?' do
     before do
       application = Facemock::Application.create!
-      user = Facemock::User.create!
-      options = { application_id: application.id, user_id: user.id }
-      @access_token = Facemock::AccessToken.create!(options)
+      #user = Facemock::User.create!
+      #options = { application_id: application.id, user_id: user.id }
+      #@access_token = Facemock::AccessToken.create!(options)
+      @access_token = Facemock::AccessToken.create!(application_id: application.id)
     end
 
     subject { @access_token.valid? }
     it { is_expected.to eq true }
-
-    context 'when user_id' do
-      context 'is nil' do
-        before { @access_token.user_id = nil }
-        it { is_expected.to eq false }
-      end
-
-      context 'is not Fixnum' do
-        before { @access_token.user_id = @access_token.user_id.to_s }
-        it { is_expected.to eq false }
-      end
-    end
 
     context 'when application_id' do
       context 'is nil' do
@@ -196,11 +185,6 @@ describe Facemock::AccessToken do
         before { @access_token.string = 1 }
         it { is_expected.to eq false }
       end
-    end
-
-    context 'when user does not find by user_id' do
-      before { @access_token.user.destroy }
-      it { is_expected.to eq false }
     end
 
     context 'when application does not find by application_id' do

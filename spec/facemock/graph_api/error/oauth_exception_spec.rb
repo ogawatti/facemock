@@ -9,11 +9,66 @@ describe Facemock::GraphAPI::Error::OAuthException do
     it { is_expected.to eq type }
   end
 
+  describe Facemock::GraphAPI::Error::OAuthException::AnUnknownErrorHasOccurred do
+    describe '#new' do
+      let(:error) { Facemock::GraphAPI::Error::OAuthException::AnUnknownErrorHasOccurred.new }
+      let(:message) { "An unknown error has occurred." }
+      let(:code) { 1 }
+      let(:status) { 500 }
+
+      it_behaves_like 'GraphAPI Error'
+    end
+  end
+
+  describe Facemock::GraphAPI::Error::OAuthException::ErrorValidatingClientSecret do
+    describe '#new' do
+      let(:error) { Facemock::GraphAPI::Error::OAuthException::ErrorValidatingClientSecret.new }
+      let(:message) { "Error validating client secret." }
+      let(:code) { 1 }
+      let(:status) { 400 }
+
+      it_behaves_like 'GraphAPI Error'
+    end
+  end
+
+  describe Facemock::GraphAPI::Error::OAuthException::MissingClientIDParameter do
+    describe '#new' do
+      let(:error) { Facemock::GraphAPI::Error::OAuthException::MissingClientIDParameter.new }
+      let(:message) { "Missing client_id parameter." }
+      let(:code) { 101 }
+      let(:status) { 400 }
+
+      it_behaves_like 'GraphAPI Error'
+    end
+  end
+
+  describe Facemock::GraphAPI::Error::OAuthException::ErrorValidatingApplication do
+    describe '#new' do
+      let(:error) { Facemock::GraphAPI::Error::OAuthException::ErrorValidatingApplication.new }
+      let(:message) { "Error validating application. Cannot get application info due to a system error." }
+      let(:code) { 101 }
+      let(:status) { 400 }
+
+      it_behaves_like 'GraphAPI Error'
+    end
+  end
+
   describe Facemock::GraphAPI::Error::OAuthException::InvalidOAuthAccessToken do
     describe '#new' do
       let(:error) { Facemock::GraphAPI::Error::OAuthException::InvalidOAuthAccessToken.new }
       let(:message) { "Invalid OAuth access token." }
       let(:code) { 190 }
+      let(:status) { 400 }
+
+      it_behaves_like 'GraphAPI Error'
+    end
+  end
+
+  describe Facemock::GraphAPI::Error::OAuthException::MissingRedirectURIParameter do
+    describe '#new' do
+      let(:error) { Facemock::GraphAPI::Error::OAuthException::MissingRedirectURIParameter.new }
+      let(:message) { "Missing redirect_uri parameter." }
+      let(:code) { 191 }
       let(:status) { 400 }
 
       it_behaves_like 'GraphAPI Error'

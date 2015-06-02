@@ -11,18 +11,17 @@ module Facemock
         return super unless called?(env)
         begin
           access_token = extract_access_token(env)
-          unless access_token.valid?
-            raise Facemock::GraphAPI::Error::OAuthException::InvalidAccessToken.new
-          end
+          body   = access_token.user.to_hash.to_json
           header = { "Content-Type"   => "application/json; charset=UTF-8",
-                     "Content-Length" => self.to_json.bytesize.to_s }
-          body = Facemock::User.first.to_hash.to_json
+                     "Content-Length" => body.bytesize.to_s }
           return [ 200, header, [ body ] ]
         rescue Facemock::GraphAPI::Error => error
           return error.response
         rescue => error
+          message = error.message
           error = Facemock::GraphAPI::Error::FacebookApiException::ServiceTemporarilyUnavailable.new
-          error.message = e.message
+          error.message = message
+          return error.response
         end
       end
 
@@ -30,22 +29,28 @@ module Facemock
 
       def extract_access_token(env)
         request = Rack::Request.new(env)
-        query = Hashie::Mash.new(request.params)
+        params = Hashie::Mash.new(request.params)
         access_token_string = extract_access_token_string(env)
 
+        # Access Tokenの抽出
         if access_token_string.blank?
           raise Facemock::GraphAPI::Error::OAuthException::AccessTokenDoesNotExist.new
         elsif (access_token = Facemock::AccessToken.find_by_string(access_token_string)).nil?
           error = Facemock::GraphAPI::Error::OAuthException::InvalidOAuthAccessToken.new
-          error.status = 401 if query.appsecret_proof
+          error.status = 401 if params.appsecret_proof
           raise error
-        elsif !query.appsecret_proof.blank?
+        elsif !params.appsecret_proof.blank?
           sha256 = OpenSSL::Digest::SHA256.new
           app_secret = access_token.application.secret
           appsecret_proof = OpenSSL::HMAC.hexdigest(sha256, app_secret, access_token.string)
-          unless appsecret_proof == query.appsecret_proof
+          unless appsecret_proof == params.appsecret_proof
             raise Facemock::GraphAPI::Error::GraphMethodException::InvalidAppSecretProof.new
           end
+        end
+
+        # Access Tokenの検証
+        if !access_token.valid? || access_token.user.blank?
+          raise Facemock::GraphAPI::Error::OAuthException::InvalidAccessToken.new
         end
         access_token
       end

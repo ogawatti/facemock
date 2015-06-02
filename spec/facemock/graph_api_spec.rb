@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Facemock::GraphAPI do
   let(:hostname)    { 'graph.facebook.com' }
   let(:port)        { 443 }
-  let(:middlewares) { [ Facemock::GraphAPI::Me ] }
+  let(:middlewares) { [ Facemock::GraphAPI::Me, Facemock::GraphAPI::OAuth::AccessToken ] }
 
   describe '::HOSTNAME' do
     subject { Facemock::GraphAPI::HOSTNAME }
