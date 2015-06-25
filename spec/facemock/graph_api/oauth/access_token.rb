@@ -5,11 +5,12 @@ describe Facemock::GraphAPI::OAuth::AccessToken do
   include TestApplicationHelper
   include Rack::Test::Methods
 
-  let(:method) { 'POST' }
-  let(:path)   { '/oauth/access_token' }
-  let(:test_app) { TestApplicationHelper::TestRackApplication.new }
-  let(:app)      { Facemock::GraphAPI::OAuth::AccessToken.new(test_app) }
-  let(:db_name)  { ".test" }
+  let(:method)     { 'POST' }
+  let(:path)       { '/oauth/access_token' }
+  let(:grant_type) { "client_credentials" }
+  let(:test_app)   { TestApplicationHelper::TestRackApplication.new }
+  let(:app)        { Facemock::GraphAPI::OAuth::AccessToken.new(test_app) }
+  let(:db_name)    { ".test" }
 
   describe 'METHOD' do
     subject { Facemock::GraphAPI::OAuth::AccessToken::METHOD }
@@ -21,6 +22,11 @@ describe Facemock::GraphAPI::OAuth::AccessToken do
     it { is_expected.to eq path }
   end
 
+  describe 'GRANT_TYPE' do
+    subject { Facemock::GraphAPI::OAuth::AccessToken::GRANT_TYPE }
+    it { is_expected.to eq grant_type }
+  end
+
   describe 'POST /oauth/access_token' do
     before { @database = Facemock::Database.new(db_name) }
     after  { @database.drop }
@@ -30,7 +36,6 @@ describe Facemock::GraphAPI::OAuth::AccessToken do
     let(:request_body)  { { :grant_type    => grant_type,
                             :client_id     => application.id,
                             :client_secret => application.secret } }
-    let(:grant_type)    { "client_credentials" }
     let(:client_id)     { application.id }
     let(:client_secret) { application.secret }
 

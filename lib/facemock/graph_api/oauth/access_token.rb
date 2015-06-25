@@ -14,7 +14,7 @@ module Facemock
           return super unless called?(env)
           begin
             application  = extract_application(env)
-            access_token = Facemock::AccessToken.create_server_token!(application.id)
+            access_token = application.create_server_token!
             body   = "access_token=#{access_token.string}"
             header = { "Content-Type"   => "text/plain; charset=UTF-8",
                        "Content-Length" => body.bytesize.to_s }

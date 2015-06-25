@@ -14,7 +14,7 @@ module Facemock
 
         class ErrorValidatingClientSecret < OAuthException
           def initialize(message=nil)
-            @message ||= "Error validating client secret."
+            @message ||= (message || "Error validating client secret.")
             @code      = 1
             @status    = 400
             super
@@ -23,7 +23,7 @@ module Facemock
 
         class AnUnknownErrorHasOccurred < OAuthException
           def initialize(message=nil)
-            @message ||= "An unknown error has occurred."
+            @message ||= (message || "An unknown error has occurred.")
             @code      = 1
             @status    = 500
             super
@@ -32,7 +32,7 @@ module Facemock
 
         class MissingClientIDParameter < OAuthException
           def initialize(message=nil)
-            @message ||= "Missing client_id parameter."
+            @message ||= (message || "Missing client_id parameter.")
             @code      = 101
             @status    = 400
             super
@@ -41,8 +41,17 @@ module Facemock
 
         class ErrorValidatingApplication < OAuthException
           def initialize(message=nil)
-            @message ||= "Error validating application. Cannot get application info due to a system error."
+            @message ||= (message || "Error validating application. Cannot get application info due to a system error.")
             @code      = 101
+            @status    = 400
+            super
+          end
+        end
+
+        class AccessTokenIsRequired < OAuthException
+          def initialize(message=nil)
+            @message ||= (message || "An access token is required to request this resource.")
+            @code      = 104
             @status    = 400
             super
           end
@@ -50,7 +59,7 @@ module Facemock
 
         class InvalidOAuthAccessToken < OAuthException
           def initialize(message=nil)
-            @message ||= "Invalid OAuth access token."
+            @message ||= (message || "Invalid OAuth access token.")
             @code      = 190
             @status    = 400
             super
@@ -59,7 +68,7 @@ module Facemock
 
         class MissingRedirectURIParameter < OAuthException
           def initialize(message=nil)
-            @message ||= "Missing redirect_uri parameter."
+            @message ||= (message || "Missing redirect_uri parameter.")
             @code      = 191
             @status    = 400
             super
@@ -68,7 +77,7 @@ module Facemock
 
         class InvalidAccessToken < OAuthException
           def initialize(message=nil)
-            @message ||= "Access token has expired, been revoked, or is otherwise invalid - Handle expired access tokens."
+            @message ||= (message || "Access token has expired, been revoked, or is otherwise invalid - Handle expired access tokens.")
             @code      = 467
             @status    = 400
             super
@@ -77,7 +86,7 @@ module Facemock
 
         class AccessTokenDoesNotExist < OAuthException
           def initialize(message=nil)
-            @message  ||= "An active access token must be used to query information about the current user."
+            @message  ||= (message || "An active access token must be used to query information about the current user.")
             @code      = 2500
             @status    = 400
             super

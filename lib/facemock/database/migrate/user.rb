@@ -12,6 +12,7 @@ module Facemock
               name            TEXT      NOT NULL,
               email           TEXT      NOT NULL,
               password        TEXT      NOT NULL,
+              role            INTEGER   NOT NULL,
               created_at      DATETIME  NOT NULL,
               UNIQUE(email)
             );
