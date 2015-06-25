@@ -53,6 +53,17 @@ describe Facemock::GraphAPI::Error::OAuthException do
     end
   end
 
+  describe Facemock::GraphAPI::Error::OAuthException::AccessTokenIsRequired do
+    describe '#new' do
+      let(:error) { Facemock::GraphAPI::Error::OAuthException::AccessTokenIsRequired.new }
+      let(:message) { "An access token is required to request this resource." }
+      let(:code) { 104 }
+      let(:status) { 400 }
+
+      it_behaves_like 'GraphAPI Error'
+    end
+  end
+
   describe Facemock::GraphAPI::Error::OAuthException::InvalidOAuthAccessToken do
     describe '#new' do
       let(:error) { Facemock::GraphAPI::Error::OAuthException::InvalidOAuthAccessToken.new }

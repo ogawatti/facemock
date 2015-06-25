@@ -9,16 +9,31 @@ describe Facemock::User do
                            :password,
                            :created_at ] }
 
+  let(:general_role)   { 0 }
+  let(:test_role)      { 1 }
+
   let(:id)             { 1 }
   let(:name)           { "test user" }
   let(:email)          { "hoge@fugapiyo.com" }
   let(:password)       { "testpass" }
+  let(:role)           { 0 }
   let(:created_at)     { Time.now }
   let(:options)        { { id:             id, 
                            name:           name,
                            email:          email,
                            password:       password,
+                           role:           role,
                            created_at:     created_at } }
+
+  describe '::GENERAL_ROLE' do
+    subject { Facemock::User::GENERAL_ROLE }
+    it { is_expected.to eq general_role }
+  end
+
+  describe '::TEST_ROLE' do
+    subject { Facemock::User::TEST_ROLE }
+    it { is_expected.to eq test_role }
+  end
 
   describe '#initialize' do
     before { @database = Facemock::Database.new(db_name) }
@@ -59,6 +74,12 @@ describe Facemock::User do
           subject { Facemock::User.new.password.size }
           it { is_expected.to be_between(8, 16) }
         end
+      end
+
+      describe '.role' do
+        subject { Facemock::User.new.role }
+        it { is_expected.to be_kind_of Fixnum }
+        it { is_expected.to eq role }
       end
 
       describe '.created_at' do
@@ -107,6 +128,22 @@ describe Facemock::User do
           end
         end
       end
+    end
+  end
+
+  describe '#test_user?' do
+    let(:user) { Facemock::User.new(options) }
+
+    context 'when role is general' do
+      let(:options) { { role: Facemock::User::GENERAL_ROLE } }
+      subject { user.test_user? }
+      it { is_expected.to eq false }
+    end
+
+    context 'when role is test' do
+      let(:options) { { role: Facemock::User::TEST_ROLE } }
+      subject { user.test_user? }
+      it { is_expected.to eq true }
     end
   end
 
@@ -216,5 +253,14 @@ describe Facemock::User do
     before { @user = Facemock::User.new }
     subject { @user.to_json }
     it { is_expected.to eq @user.to_hash.to_json }
+  end
+
+  describe '#index' do
+    before { @database = Facemock::Database.new(db_name) }
+    after { @database.drop }
+    let(:user) { Facemock::User.new }
+
+    subject { user.index }
+    it { is_expected.to eq user.id.base62_encode }
   end
 end

@@ -2,6 +2,7 @@ require 'webmock'
 require 'facemock/graph_api/me'
 require 'facemock/graph_api/root'
 require 'facemock/graph_api/oauth/access_token'
+require 'facemock/graph_api/application/accounts/test-users'
 require 'facemock/graph_api/error'
 
 module Facemock

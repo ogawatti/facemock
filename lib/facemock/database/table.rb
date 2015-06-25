@@ -105,12 +105,13 @@ module Facemock
         record_to_object(records.first)
       end
 
-      def self.where(column)
-        column_name = column.keys.first
-        value = column.values.first
-        column_value = (value.kind_of?(String)) ? "'" + value + "'" : value.to_s
-
-        records = execute "SELECT * FROM #{table_name} WHERE #{column_name} = #{column_value};"
+      def self.where(options)
+        where = options.inject([]) do |where, (key, value)|
+          column_name = key
+          column_value = (value.kind_of?(String)) ? "'" + value + "'" : value.to_s
+          where << "#{column_name} = #{column_value}"
+        end
+        records = execute "SELECT * FROM #{table_name} WHERE #{where.join(' AND ')}"
         records_to_objects(records)
       end
 

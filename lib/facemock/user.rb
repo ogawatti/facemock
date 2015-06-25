@@ -2,10 +2,14 @@ require 'faker'
 require 'facemock/database/table'
 require 'facemock/access_token'
 require 'facemock/authorization_code'
+require 'base62'
 require 'time'
 
 module Facemock
   class User < Database::Table
+    GENERAL_ROLE = 0
+    TEST_ROLE    = 1
+
     has_many :access_tokens, :dependent => :destroy
     has_many :authorization_codes, :dependent => :destroy
 
@@ -15,6 +19,7 @@ module Facemock
       @name       = opts.name || create_user_name
       @email      = opts.email || Faker::Internet.email
       @password   = opts.password || Faker::Internet.password
+      @role       = opts.role || GENERAL_ROLE
       @created_at = opts.created_at
     end
 
@@ -33,6 +38,14 @@ module Facemock
         timezone:     9,
         updated_time: Time.parse("2014/07/22"),
         verified:     true }
+    end
+
+    def test_user?
+      self.role == TEST_ROLE
+    end
+
+    def index
+      self.id.base62_encode
     end
 
     private
