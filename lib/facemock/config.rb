@@ -18,7 +18,6 @@ module Facemock
 
     def reset_database
       db = Facemock::Database.new
-      db.disconnect!
       db.drop
     end
 
